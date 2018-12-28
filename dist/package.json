@@ -1,6 +1,6 @@
 {
   "name": "wizard-query",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "private": false,
   "keywords": [
@@ -8,6 +8,7 @@
     "json",
     "xml",
     "jsonpath",
+    "json-path",
     "tree traversal",
     "node-query",
     "object-query",

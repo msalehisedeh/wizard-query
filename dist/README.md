@@ -2,7 +2,7 @@
 
 Have you ever been in need of accessing data deeply nested in multitude of files? Have you thought of a tool that can help you dig deep in a chain of files to find what you are looking for? This wizard allows you to just do that.
 
-You can use this wizard to discover content or call the service through provided methods to have your application access and use data in the most efficient way. the target URL could have extension (i.e., XML, HTML, JSON, ...) or no extension at all. You can fetch content of a file or content of a site.
+You can use this wizard to discover content or call the service through provided methods to have your application access and use data in the most efficient way. the target URL could have extension (i.e., XML, HTML, JSON, ...) or no extension at all. You can fetch content of a file or content of a site. To do so, begin with '' as a JSON path of the root site page. this will reveal every node in object hierarchy. look at the content and if you find something you want to get all the times, use its json path in your query. if the target node value is another file, use a join query for json path to the target node with a '' JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for.
 
 
 [Live Demo](https://wizard-query.stackblitz.io) | [Source code](https://github.com/msalehisedeh/wizard-query/tree/master/src/app) | [Comments/Requests](https://github.com/msalehisedeh/wizard-query/issues)
@@ -13,14 +13,14 @@ If you do not want to directly use wizardQueryService, you can use the wizardQue
 | Method              |Description                                                   |
 |------------|-----------------------------------------------------------------------|
 |select      |Use a single path or a list of JSON qualifying paths to access content.|
-|arraySelect |Use an array of {path: '', url:''} to access content. This method will invoke select(). But first, requests with similar paths will be merged into one call.  This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths.|
-|chainSelect |Use a chained set of {path: '', url: '', join: {}} in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join atrtribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files.|
+|arraySelect |Use an array of {path: '', in:''} to access content. This method will invoke select(). But first, requests with similar paths will be merged into one call.  This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths.|
+|chainSelect |Use a chained set of {path: ['path1','path2'], in: 'url1', join: {path1: {path:'px', in:'urlx', join: {}}, path2: {path: 'py', in: 'urly'}}} in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files.|
 
 
 If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path.
-For example: select('/example1.xml', ['books.book.title', 'books.book.author']) will result in {'books.book.title': [], 'books.book.author': []}. If a clause argument is supplied, it will be invoked to further assist in filtering the query result. for example if certain category of books are required, the clause function can look for a book category attribute and return the query result if acceptable or undefined if result should be filtered out of the result.
+For example: select(['books.book.title', 'books.book.author'], '/example1.xml') will result in {'books.book.title': [], 'books.book.author': []}. If a clause argument is supplied, it will be invoked to further assist in filtering the query result. for example if certain category of books are required, the clause function can look for a book category attribute and return the query result if acceptable or undefined if result should be filtered out of the result.
 
-The wizard service allows you to set a default path that prepends to all query URLs. By default it's value is blank.
+The wizard service allows you to set a default base path that prepends to all query URLs. By default it's value is blank. Note: If the subsequent URLs in a chain query point to different website URLs, do not set the base url value.
 
 
 ## Sample Use
@@ -29,9 +29,14 @@ To use the directive, load it on any tag as follows:
 <div [wizardQuery]="myQuery" (onQueryResult)="result=$event" (onQueryError)="error=$event"></div>
 ```
 
+To use the component which allows you to interactively discover the contents, do the following code:
+```javascript
+<wizard-query [queryInfo]="data"></wizard-query>
+```
+
 To use the service directly, call anyone of available methods as follows:
 ```javascript
-private bublicationHandler(node: any, path: string, value: any) {
+private publicationHandler(node: any, path: string, value: any) {
 	// examine the node and return the value if it should be included in final result.
 	// return undefined otherwise.
 }
@@ -40,7 +45,7 @@ private bublicationHandler(node: any, path: string, value: any) {
 this.select(
     path: '',
     from: 'sample1.xml',
-    this.bublicationHandler).subscribe(
+    this.publicationHandler).subscribe(
         (success) => {
           if(success) {
             this.result = success;
@@ -55,7 +60,7 @@ this.select(
 this.select(
     path: 'books.book',
     from: 'sample1.xml',
-    this.bublicationHandler).subscribe(
+    this.publicationHandler).subscribe(
         (success) => {
           if(success) {
             this.result = success;
@@ -69,10 +74,10 @@ this.select(
 // this call will return author and title of books in sample1 and entire book contents in sample2
 this.wizardService.arraySelect(
 	[
-		{path: 'books.book',url: 'sample2'},
-		{path: 'books.book.author',url: 'sample1'},
-		{path: 'books.book.title',url: 'sample1'}
-	], this.bublicationHandler).subscribe(
+		{path: 'books.book',in: 'sample2'},
+		{path: 'books.book.author',in: 'sample1'},
+		{path: 'books.book.title',in: 'sample1'}
+	], this.publicationHandler).subscribe(
         (success) => {
           if(success) {
             this.result = success;
@@ -88,12 +93,12 @@ this.wizardService.arraySelect(
 // directory.
 this.wizardService.chainSelect({
    path: 'books.book',
-   url: 'sample1.xml',
+   in: 'sample1.xml',
    join: {
     'books.book': {
-      url: '/samples/books/',
       path: ['publication.title', 'publication.author'],
-      handler: this.bublicationHandler
+      in: '/samples/books/',
+      handler: this.publicationHandler
     }
    }).subscribe(
         (success) => {
@@ -184,6 +189,9 @@ this.select(
         }
     );
 ```
+
+# Version 1.0.1
+corrections to readme file.
 
 # Version 1.0.0
 initial functionality.
