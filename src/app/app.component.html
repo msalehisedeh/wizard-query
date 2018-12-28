@@ -1,0 +1,22 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div style="text-align:center">
+  <h1>
+    Welcome to {{ title }}!
+  </h1>
+</div>
+
+<div class="note">
+  <label for="entry">Select a sample file: </label>
+  <select id="entry"  (change)="selectSample($event)">
+    <option>Select a file</option>
+    <option 
+      *ngFor="let option of testFiles" 
+      [value]="option.query.in" 
+      [textContent]="option.label"></option>
+  </select>
+  <br />
+  <br />
+  Select a sample and modify it's sample query. You can dig deep in chain of files and discover a thing or two!
+</div>
+<wizard-query [queryInfo]="data"></wizard-query>
+
