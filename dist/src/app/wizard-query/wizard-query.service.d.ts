@@ -6,8 +6,8 @@ export declare class WizardQueryService {
     SERVICE_PATH: string;
     logEnabled: boolean;
     constructor(http: HttpClient);
-    private _normalize(value);
-    private _valueOfJsonPath(path, data, clause?);
+    private _normalize(value, deepXml);
+    private _valueOfJsonPath(path, data, deepXml, clause?);
     private _get(path);
     private _stringValueOfKey(key);
     private _addToResult(value, key, operation, action);
@@ -20,5 +20,5 @@ export declare class WizardQueryService {
     private _xml2json(xml);
     chainSelect(chainQuery: any): BehaviorSubject<any>;
     arraySelect(list: any, clause?: clauseEvaluator): BehaviorSubject<any>;
-    select(path: any, from: string, clause?: clauseEvaluator): BehaviorSubject<any>;
+    select(path: any, from: string, deepXml: boolean, clause?: clauseEvaluator): BehaviorSubject<any>;
 }

@@ -17,19 +17,21 @@ var WizardQueryService = /** @class */ (function () {
     }
     /**
      * @param {?} value
+     * @param {?} deepXml
      * @return {?}
      */
     WizardQueryService.prototype._normalize = /**
      * @param {?} value
+     * @param {?} deepXml
      * @return {?}
      */
-    function (value) {
+    function (value, deepXml) {
         var _this = this;
         if (value instanceof Array) {
             /** @type {?} */
             var result_1 = [];
             value.map(function (item) {
-                result_1.push(_this._normalize(item));
+                result_1.push(_this._normalize(item, deepXml));
             });
             value = result_1;
         }
@@ -42,14 +44,16 @@ var WizardQueryService = /** @class */ (function () {
                 }
                 else if (value['#cdata-section']) {
                     value = value['#cdata-section'];
-                    try {
-                        /** @type {?} */
-                        var xml = new DOMParser().parseFromString(value);
-                        value = (xml.documentElement && xml.documentElement != null) ?
-                            this._xml2json(xml.documentElement) :
-                            value;
-                    }
-                    catch (e) {
+                    if (deepXml) {
+                        try {
+                            /** @type {?} */
+                            var xml = new DOMParser().parseFromString(value);
+                            value = (xml.documentElement && xml.documentElement != null) ?
+                                this._xml2json(xml.documentElement) :
+                                value;
+                        }
+                        catch (e) {
+                        }
                     }
                 }
             }
@@ -57,7 +61,7 @@ var WizardQueryService = /** @class */ (function () {
                 /** @type {?} */
                 var result_2 = {};
                 items.map(function (item) {
-                    result_2[item] = _this._normalize(value[item]);
+                    result_2[item] = _this._normalize(value[item], deepXml);
                 });
                 value = result_2;
             }
@@ -67,20 +71,22 @@ var WizardQueryService = /** @class */ (function () {
     /**
      * @param {?} path
      * @param {?} data
+     * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
     WizardQueryService.prototype._valueOfJsonPath = /**
      * @param {?} path
      * @param {?} data
+     * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
-    function (path, data, clause) {
+    function (path, data, deepXml, clause) {
         /** @type {?} */
         var result;
         /** @type {?} */
-        var x = this._normalize(data);
+        var x = this._normalize(data, deepXml);
         path.map(function (subkey) {
             /** @type {?} */
             var node = x;
@@ -323,10 +329,10 @@ var WizardQueryService = /** @class */ (function () {
                 op[key2] = opk;
             }
             if (op[key2]) {
-                op[key2].push(this._normalize(value));
+                op[key2].push(this._normalize(value, action.deepXml));
             }
             else {
-                op.push(this._normalize(value));
+                op.push(this._normalize(value, action.deepXml));
             }
         }
         else {
@@ -339,7 +345,7 @@ var WizardQueryService = /** @class */ (function () {
                     operation['temp'][key2] = true;
                 }
             }
-            operation.result[path][key2] = this._normalize(value);
+            operation.result[path][key2] = this._normalize(value, action.deepXml);
             complete = true;
         }
         return complete;
@@ -412,6 +418,7 @@ var WizardQueryService = /** @class */ (function () {
             this._queryIteration(operation.cachedFiles[path], operation, {
                 path: action.path,
                 in: action.in,
+                deepXml: action.deepXml,
                 join: action.join,
                 queryItems: (action.path instanceof Array) ? action.path.length : 1
             }, path);
@@ -427,6 +434,7 @@ var WizardQueryService = /** @class */ (function () {
                             _this._subquery(promise, item, operation, {
                                 path: opkeyi_1.path,
                                 in: opkeyi_1.in + item,
+                                deepXml: opkeyi_1.deepXml,
                                 join: opkeyi_1.join,
                                 queryItems: (opkeyi_1.path instanceof Array) ? opkeyi_1.path.length : 1
                             });
@@ -436,6 +444,7 @@ var WizardQueryService = /** @class */ (function () {
                         _this._subquery(promise, source, operation, {
                             path: action.join[opkeyi_1.path],
                             in: opkeyi_1.in + source,
+                            deepXml: action.deepXml,
                             join: opkeyi_1.join,
                             queryItems: (opkeyi_1.path instanceof Array) ? opkeyi_1.path.length : 1
                         });
@@ -479,7 +488,7 @@ var WizardQueryService = /** @class */ (function () {
         if (!action.handle) {
             action.handler = function (node, path, value) { return value; };
         }
-        this.select(action.path, action.in, action.handler).subscribe(function (data) {
+        this.select(action.path, action.in, action.deepXml, action.handler).subscribe(function (data) {
             if (data) {
                 if (cacheNamed) {
                     // result of n-th level call to be placed on previous level cache reference.
@@ -497,6 +506,7 @@ var WizardQueryService = /** @class */ (function () {
                                 _this._subquery(promise, path, operation, {
                                     path: operationalKey_1.path,
                                     in: operationalKey_1.in + content,
+                                    deepXml: operationalKey_1.deepXml,
                                     join: operationalKey_1.join,
                                     queryItems: (operationalKey_1.path instanceof Array) ? operationalKey_1.path.length : 1
                                 });
@@ -522,6 +532,7 @@ var WizardQueryService = /** @class */ (function () {
                                 _this._subquery(promise, content, operation, {
                                     path: operationalKey.path,
                                     in: operationalKey.in + content,
+                                    deepXml: operationalKey.deepXml,
                                     queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                 });
                             }
@@ -733,7 +744,7 @@ var WizardQueryService = /** @class */ (function () {
     * json path and its value will be the resulting value.
     *
     * this is not fully tested. caller should pass something like
-    * {path: [path1,path2], in: 'something or blank', k1: {path: path3, in: 'something or plank', clause: function}}
+    * {path: [path1,path2], in: 'something or blank', deepXml: true, join: {k1: {path: path3, in: 'something or plank', clause: function}}}
     * if path1 or path2 or path3 are found at the root object, a chain reaction to fetch deep will follow. An
     * optional clause will help resolve complex situations.
     *
@@ -757,6 +768,7 @@ var WizardQueryService = /** @class */ (function () {
         this._queryIteration(dataStore, operation, {
             path: chainQuery.path,
             in: chainQuery.in,
+            deepXml: chainQuery.deepXml,
             join: chainQuery.join,
             queryItems: size
         });
@@ -764,7 +776,7 @@ var WizardQueryService = /** @class */ (function () {
     };
     /*
     * Will group file paths if they are similar to avoid multiple calls.
-    * @param list A list of Json {paths, in} structures.
+    * @param list A list of Json {paths, in, deepXml} structures. deepXml is optional.
     * @param clause A method by which value(s) for the path(s) could be evaluated. the caller would evaluate the value for a given attribute.
     * @returns returns an observable. the caller should subscribe to this in order to receive the result.
     */
@@ -786,12 +798,12 @@ var WizardQueryService = /** @class */ (function () {
             if (groupedList[item.in] === undefined) {
                 groupedList[item.in] = [];
             }
-            groupedList[item.in].push(item.path);
+            groupedList[item.in].push({ path: item.path, deepXml: item.deepXml });
         });
         /** @type {?} */
         var dataStore = new BehaviorSubject(null);
         Object.keys(groupedList).map(function (url) {
-            _this.select(groupedList[url], url, clause).subscribe(function (data) {
+            _this.select(groupedList[url].path, url, groupedList[url].deepXml, clause).subscribe(function (data) {
                 if (data) {
                     dataStore.next(data);
                 }
@@ -806,22 +818,25 @@ var WizardQueryService = /** @class */ (function () {
     * evaluates, filters, or sorts the resul of the query.
     * @param path A a single JSON path or list of paths to select (i.e., 'a.b.c')
     * @param from A reference URL to a remote source.
+    * @param deepXml if cdata-section should be parsed.
     * @param clause A method by which value(s) for the path(s) could be evaluated. the caller would evaluate the value for a given attribute.
     * @returns returns an observable. the caller should subscribe to this in order to receive the result.
     */
     /**
      * @param {?} path
      * @param {?} from
+     * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
     WizardQueryService.prototype.select = /**
      * @param {?} path
      * @param {?} from
+     * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
-    function (path, from, clause) {
+    function (path, from, deepXml, clause) {
         var _this = this;
         /** @type {?} */
         var dataStore = new BehaviorSubject(null);
@@ -837,7 +852,7 @@ var WizardQueryService = /** @class */ (function () {
                 result = {};
                 jpath.map(function (pathItem) {
                     /** @type {?} */
-                    var y = _this._valueOfJsonPath(pathItem, data, clause);
+                    var y = _this._valueOfJsonPath(pathItem, data, deepXml, clause);
                     if (y) {
                         /** @type {?} */
                         var key = _this._stringValueOfKey(pathItem);
@@ -849,7 +864,7 @@ var WizardQueryService = /** @class */ (function () {
                 }
             }
             else if (typeof path === 'string') {
-                result = _this._valueOfJsonPath(jpath, data, clause);
+                result = _this._valueOfJsonPath(jpath, data, deepXml, clause);
             }
             if (result) {
                 dataStore.next(result);

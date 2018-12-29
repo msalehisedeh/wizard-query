@@ -5,27 +5,28 @@
 * path to an end node (i.e., 'books.book.title'). If multiple paths are supplied, query result will be a json
 * object where each attribute will be a given query path and its value will be query result for that path.
 * For example:
-* select('/example1.xml', ['books.book.title', 'books.book.author'])
+* select(['books.book.title', 'books.book.author'], '/example1.xml', false)
 * will result in {'books.book.title': [], 'books.book.author': []}.
 * Each result will not co-related with other result in order or in any other form. if a clause argument is
 * supplied, it will be invoked to further assist in filtering the query result. for example if certain category
 * of books are required, the clause function can look for a book category attribute and return the query result
 * if acceptable or undefined if result should be filtered out of the result.
 *
-* 2) With arraySelect() method, an array of {path: '', in:''} can be supplied, each entry will be evaluated
+* 2) With arraySelect() method, an array of {path: '', in:'', deepXml: true} can be supplied, each entry will be evaluated
 * as if select() method is invoked. But first, requests with similar paths will be merged into one call.  This
 * method is useful when paths are dynamicly given and it is not clear in advance if there are requests with
-* similar paths.
+* similar paths. deepXml attribute is optional.
 *
-* 3) With chainSelect() method, a chained set of {path: '', in: ''} is given in a json object. When result of
+* 3) With chainSelect() method, a chained set of {path: '', in: '', deepXml: true} is given in a json object. When result of
 * a query becomes available, the request json will be examined to see if a request for the key is available. If
-* so, then the 'in' for the path will be prepended to the resulting value of the previous query. This method is
-* useful when result of a query is a json or an xml file and additional query is needed further down in the
-* preceeding files. For example the assumption in the following call is that each books.book result will be a
-* file name and the file path for each result is '/samples/books/'.
+* so, then the 'in' for the path will be prepended to the resulting value of the previous query. , deepXml attribute is 
+* optional. This method is useful when result of a query is a json or an xml file and additional query is needed 
+* further down in the preceeding files. For example the assumption in the following call is that each books.book 
+* result will be a file name and the file path for each result is '/samples/books/'.
 * chainSelect({
 *   path: 'books.book',
 *   in: 'sample1.xml',
+*   deepXml: true,
 *   'books.book': {
 *       in: '/samples/books/',
 *       path: ['publication.title', 'publication.author'],
@@ -64,13 +65,14 @@ export class WizardQueryService {
     /*
     * Will normalize the given xml out of additional #text or #cdata-section nodes.
     * @param value the xml to be normailzed.
+    * @param deepXml if cdata-section should be parsed.
     * @return normalized xml.
     */
-    private _normalize(value: any) {
+    private _normalize(value: any, deepXml: boolean) {
         if (value instanceof Array) {
             const result = [];
             value.map( (item) => {
-                result.push(this._normalize(item));
+                result.push(this._normalize(item, deepXml));
             });
             value = result;
         } else if (typeof value === 'object') {
@@ -81,18 +83,20 @@ export class WizardQueryService {
                     value = value['#text'];
                 } else if (value['#cdata-section']) {
                     value = value['#cdata-section'];
-                    try {
-                        const xml = new xmldom.DOMParser().parseFromString(value);
-                        value = (xml.documentElement && xml.documentElement != null) ?
-                                    this._xml2json(xml.documentElement) :
-                                    value;
-                    }catch(e){
+                    if (deepXml) {
+                        try {
+                            const xml = new xmldom.DOMParser().parseFromString(value);
+                            value = (xml.documentElement && xml.documentElement != null) ?
+                                        this._xml2json(xml.documentElement) :
+                                        value;
+                        }catch(e){
+                        }
                     }
                 }
             } else {
                 const result = {};
                 items.map( (item) => {
-                    result[item] = this._normalize(value[item]);
+                    result[item] = this._normalize(value[item], deepXml);
                 });
                 value = result;
             }
@@ -103,16 +107,18 @@ export class WizardQueryService {
     /*
     * @param path JSON path to evaluate. A path could be fully qualified for depth of json (i.e., 'a.b.c')
     * @param data the data source.
+    * @param deepXml if cdata-section should be parsed.
     * @param clause A method by which value(s) for the key(s) could be evaluated. the caller would evaluate the value for a given attribute.
     * @returns returns evluated value for the key in data source.
     */
     private _valueOfJsonPath(
         path: any,
         data: any,
+        deepXml: boolean,
         clause?: clauseEvaluator): any {
 
         let result: any;
-        let x = this._normalize(data);
+        let x = this._normalize(data, deepXml);
         path.map( (subkey: any) => {
             let node = x;
             if (node && node instanceof Array) {
@@ -305,9 +311,9 @@ export class WizardQueryService {
                 op[key2] = opk;
             }
             if (op[key2]) {
-                op[key2].push(this._normalize(value));
+                op[key2].push(this._normalize(value, action.deepXml) );
             } else {
-                op.push(this._normalize(value));
+                op.push(this._normalize(value, action.deepXml) );
             }
         } else {
             if (value instanceof Array) {
@@ -319,7 +325,7 @@ export class WizardQueryService {
                     operation['temp'][key2] = true;
                 }
             }
-            operation.result[path][key2] = this._normalize(value);
+            operation.result[path][key2] = this._normalize(value, action.deepXml);
             complete = true;
         }
         return complete;
@@ -370,6 +376,7 @@ export class WizardQueryService {
                 {
                     path: action.path,
                     in: action.in,
+                    deepXml: action.deepXml,
                     join: action.join,
                     queryItems: (action.path instanceof Array) ? action.path.length : 1
                 },
@@ -393,6 +400,7 @@ export class WizardQueryService {
                                         {
                                             path: opkeyi.path,
                                             in: opkeyi.in + item,
+                                            deepXml: opkeyi.deepXml,
                                             join: opkeyi.join,
                                             queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                                         }
@@ -407,6 +415,7 @@ export class WizardQueryService {
                                 {
                                     path: action.join[opkeyi.path],
                                     in: opkeyi.in + source,
+                                    deepXml: action.deepXml,
                                     join: opkeyi.join,
                                     queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                                 }
@@ -449,7 +458,7 @@ export class WizardQueryService {
         if (!action.handle) {
             action.handler = (node: any, path: string, value: any) => value;
         }
-        this.select(action.path, action.in, action.handler).subscribe(
+        this.select(action.path, action.in, action.deepXml, action.handler).subscribe(
             (data) => {
                 if (data) {
                     if (cacheNamed) {
@@ -465,6 +474,7 @@ export class WizardQueryService {
                                     this._subquery(promise, path, operation, {
                                         path: operationalKey.path,
                                         in: operationalKey.in + content,
+                                        deepXml: operationalKey.deepXml,
                                         join: operationalKey.join,
                                         queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                     });
@@ -490,6 +500,7 @@ export class WizardQueryService {
                                         {
                                             path: operationalKey.path,
                                             in: operationalKey.in + content,
+                                            deepXml: operationalKey.deepXml,
                                             queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                         }
                                     );
@@ -664,7 +675,7 @@ export class WizardQueryService {
     * json path and its value will be the resulting value.
     *
     * this is not fully tested. caller should pass something like
-    * {path: [path1,path2], in: 'something or blank', k1: {path: path3, in: 'something or plank', clause: function}}
+    * {path: [path1,path2], in: 'something or blank', deepXml: true, join: {k1: {path: path3, in: 'something or plank', clause: function}}}
     * if path1 or path2 or path3 are found at the root object, a chain reaction to fetch deep will follow. An
     * optional clause will help resolve complex situations.
     *
@@ -681,6 +692,7 @@ export class WizardQueryService {
             {
                 path: chainQuery.path,
                 in: chainQuery.in,
+                deepXml: chainQuery.deepXml,
                 join: chainQuery.join,
                 queryItems: size
             }
@@ -690,7 +702,7 @@ export class WizardQueryService {
 
     /*
     * Will group file paths if they are similar to avoid multiple calls.
-    * @param list A list of Json {paths, in} structures.
+    * @param list A list of Json {paths, in, deepXml} structures. deepXml is optional.
     * @param clause A method by which value(s) for the path(s) could be evaluated. the caller would evaluate the value for a given attribute.
     * @returns returns an observable. the caller should subscribe to this in order to receive the result.
     */
@@ -702,12 +714,12 @@ export class WizardQueryService {
             if (groupedList[item.in] === undefined) {
                 groupedList[item.in] = [];
             }
-            groupedList[item.in].push(item.path);
+            groupedList[item.in].push({path: item.path, deepXml: item.deepXml});
         });
         const dataStore = new BehaviorSubject<any>(null);
 
         Object.keys(groupedList).map ( (url) => {
-            this.select(groupedList[url], url, clause).subscribe(
+            this.select(groupedList[url].path, url, groupedList[url].deepXml, clause).subscribe(
                 (data: any) => {
                     if (data) {
                         dataStore.next(data);
@@ -726,12 +738,14 @@ export class WizardQueryService {
     * evaluates, filters, or sorts the resul of the query.
     * @param path A a single JSON path or list of paths to select (i.e., 'a.b.c')
     * @param from A reference URL to a remote source.
+    * @param deepXml if cdata-section should be parsed.
     * @param clause A method by which value(s) for the path(s) could be evaluated. the caller would evaluate the value for a given attribute.
     * @returns returns an observable. the caller should subscribe to this in order to receive the result.
     */
     select(
         path: any,
         from: string,
+        deepXml: boolean,
         clause?: clauseEvaluator): BehaviorSubject<any> {
 
         const dataStore = new BehaviorSubject<any>(null);
@@ -747,7 +761,7 @@ export class WizardQueryService {
                 if (path instanceof Array) {
                     result = {};
                     jpath.map((pathItem) => {
-                        const y = this._valueOfJsonPath(pathItem, data, clause);
+                        const y = this._valueOfJsonPath(pathItem, data, deepXml, clause);
                         if (y) {
                             let key = this._stringValueOfKey(pathItem);
                             result[key] = y;
@@ -757,7 +771,7 @@ export class WizardQueryService {
                         result = undefined;
                     }
                 } else if (typeof path === 'string') {
-                    result = this._valueOfJsonPath(jpath, data, clause);
+                    result = this._valueOfJsonPath(jpath, data, deepXml, clause);
                 }
                 if (result) {
                     dataStore.next(result);

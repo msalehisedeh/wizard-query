@@ -20,14 +20,15 @@ class WizardQueryService {
     }
     /**
      * @param {?} value
+     * @param {?} deepXml
      * @return {?}
      */
-    _normalize(value) {
+    _normalize(value, deepXml) {
         if (value instanceof Array) {
             /** @type {?} */
             const result = [];
             value.map((item) => {
-                result.push(this._normalize(item));
+                result.push(this._normalize(item, deepXml));
             });
             value = result;
         }
@@ -40,14 +41,16 @@ class WizardQueryService {
                 }
                 else if (value['#cdata-section']) {
                     value = value['#cdata-section'];
-                    try {
-                        /** @type {?} */
-                        const xml = new DOMParser().parseFromString(value);
-                        value = (xml.documentElement && xml.documentElement != null) ?
-                            this._xml2json(xml.documentElement) :
-                            value;
-                    }
-                    catch (e) {
+                    if (deepXml) {
+                        try {
+                            /** @type {?} */
+                            const xml = new DOMParser().parseFromString(value);
+                            value = (xml.documentElement && xml.documentElement != null) ?
+                                this._xml2json(xml.documentElement) :
+                                value;
+                        }
+                        catch (e) {
+                        }
                     }
                 }
             }
@@ -55,7 +58,7 @@ class WizardQueryService {
                 /** @type {?} */
                 const result = {};
                 items.map((item) => {
-                    result[item] = this._normalize(value[item]);
+                    result[item] = this._normalize(value[item], deepXml);
                 });
                 value = result;
             }
@@ -65,14 +68,15 @@ class WizardQueryService {
     /**
      * @param {?} path
      * @param {?} data
+     * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
-    _valueOfJsonPath(path, data, clause) {
+    _valueOfJsonPath(path, data, deepXml, clause) {
         /** @type {?} */
         let result;
         /** @type {?} */
-        let x = this._normalize(data);
+        let x = this._normalize(data, deepXml);
         path.map((subkey) => {
             /** @type {?} */
             let node = x;
@@ -299,10 +303,10 @@ class WizardQueryService {
                 op[key2] = opk;
             }
             if (op[key2]) {
-                op[key2].push(this._normalize(value));
+                op[key2].push(this._normalize(value, action.deepXml));
             }
             else {
-                op.push(this._normalize(value));
+                op.push(this._normalize(value, action.deepXml));
             }
         }
         else {
@@ -315,7 +319,7 @@ class WizardQueryService {
                     operation['temp'][key2] = true;
                 }
             }
-            operation.result[path][key2] = this._normalize(value);
+            operation.result[path][key2] = this._normalize(value, action.deepXml);
             complete = true;
         }
         return complete;
@@ -370,6 +374,7 @@ class WizardQueryService {
             this._queryIteration(operation.cachedFiles[path], operation, {
                 path: action.path,
                 in: action.in,
+                deepXml: action.deepXml,
                 join: action.join,
                 queryItems: (action.path instanceof Array) ? action.path.length : 1
             }, path);
@@ -385,6 +390,7 @@ class WizardQueryService {
                             this._subquery(promise, item, operation, {
                                 path: opkeyi.path,
                                 in: opkeyi.in + item,
+                                deepXml: opkeyi.deepXml,
                                 join: opkeyi.join,
                                 queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                             });
@@ -394,6 +400,7 @@ class WizardQueryService {
                         this._subquery(promise, source, operation, {
                             path: action.join[opkeyi.path],
                             in: opkeyi.in + source,
+                            deepXml: action.deepXml,
                             join: opkeyi.join,
                             queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                         });
@@ -429,7 +436,7 @@ class WizardQueryService {
         if (!action.handle) {
             action.handler = (node, path, value) => value;
         }
-        this.select(action.path, action.in, action.handler).subscribe((data) => {
+        this.select(action.path, action.in, action.deepXml, action.handler).subscribe((data) => {
             if (data) {
                 if (cacheNamed) {
                     // result of n-th level call to be placed on previous level cache reference.
@@ -447,6 +454,7 @@ class WizardQueryService {
                                 this._subquery(promise, path, operation, {
                                     path: operationalKey.path,
                                     in: operationalKey.in + content,
+                                    deepXml: operationalKey.deepXml,
                                     join: operationalKey.join,
                                     queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                 });
@@ -472,6 +480,7 @@ class WizardQueryService {
                                 this._subquery(promise, content, operation, {
                                     path: operationalKey.path,
                                     in: operationalKey.in + content,
+                                    deepXml: operationalKey.deepXml,
                                     queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                 });
                             }
@@ -675,6 +684,7 @@ class WizardQueryService {
         this._queryIteration(dataStore, operation, {
             path: chainQuery.path,
             in: chainQuery.in,
+            deepXml: chainQuery.deepXml,
             join: chainQuery.join,
             queryItems: size
         });
@@ -692,12 +702,12 @@ class WizardQueryService {
             if (groupedList[item.in] === undefined) {
                 groupedList[item.in] = [];
             }
-            groupedList[item.in].push(item.path);
+            groupedList[item.in].push({ path: item.path, deepXml: item.deepXml });
         });
         /** @type {?} */
         const dataStore = new BehaviorSubject(null);
         Object.keys(groupedList).map((url) => {
-            this.select(groupedList[url], url, clause).subscribe((data) => {
+            this.select(groupedList[url].path, url, groupedList[url].deepXml, clause).subscribe((data) => {
                 if (data) {
                     dataStore.next(data);
                 }
@@ -710,10 +720,11 @@ class WizardQueryService {
     /**
      * @param {?} path
      * @param {?} from
+     * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
-    select(path, from, clause) {
+    select(path, from, deepXml, clause) {
         /** @type {?} */
         const dataStore = new BehaviorSubject(null);
         this._get(from).subscribe((data) => {
@@ -728,7 +739,7 @@ class WizardQueryService {
                 result = {};
                 jpath.map((pathItem) => {
                     /** @type {?} */
-                    const y = this._valueOfJsonPath(pathItem, data, clause);
+                    const y = this._valueOfJsonPath(pathItem, data, deepXml, clause);
                     if (y) {
                         /** @type {?} */
                         let key = this._stringValueOfKey(pathItem);
@@ -740,7 +751,7 @@ class WizardQueryService {
                 }
             }
             else if (typeof path === 'string') {
-                result = this._valueOfJsonPath(jpath, data, clause);
+                result = this._valueOfJsonPath(jpath, data, deepXml, clause);
             }
             if (result) {
                 dataStore.next(result);

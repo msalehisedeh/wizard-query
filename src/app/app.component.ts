@@ -91,6 +91,7 @@ export class AppComponent {
           'article:RelatedToolsPath'
         ],
         in: "http://localhost:4200/assets/article.xml",
+        deepXml: true,
         join: {
           'article:AdditionalPath': {
             path: [
