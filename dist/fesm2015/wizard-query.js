@@ -101,6 +101,9 @@ class WizardQueryService {
                                 if (r) {
                                     t.push(x);
                                 }
+                                else {
+                                    x = undefined;
+                                }
                             }
                         }
                         else {
@@ -114,6 +117,9 @@ class WizardQueryService {
                                 });
                                 if (r) {
                                     t.push(item);
+                                }
+                                else {
+                                    x = undefined;
                                 }
                             }
                             else {
@@ -154,11 +160,34 @@ class WizardQueryService {
                             if (r) {
                                 t.push(item);
                             }
+                            else {
+                                x = undefined;
+                            }
                         }
                     });
                     x = t;
+                    result = x;
                 }
-                result = x;
+                else if (x) {
+                    if (subkey.validated) {
+                        /** @type {?} */
+                        let r = true;
+                        subkey.validated.map(v => {
+                            if (v(x) == false) {
+                                r = false;
+                            }
+                        });
+                        if (r) {
+                            result = x;
+                        }
+                        else {
+                            x = undefined;
+                        }
+                    }
+                    else {
+                        result = x;
+                    }
+                }
             }
             else if (node && (typeof node === 'string') && subkey.key.length) {
                 result = [];
@@ -299,14 +328,21 @@ class WizardQueryService {
                 delete operation['temp'];
             }
             else if (opk && (opk instanceof Array) === false) {
-                opk = [opk];
-                op[key2] = opk;
+                operation.result[path][key2] = [opk];
+                op = operation.result[path];
             }
+            value = this._normalize(value, action.deepXml);
             if (op[key2]) {
-                op[key2].push(this._normalize(value, action.deepXml));
+                op[key2].push(value[key2] ? value[key2] : value);
             }
             else {
-                op.push(this._normalize(value, action.deepXml));
+                if ((op instanceof Array) === false) {
+                    operation.result[path] = [op];
+                    operation.result[path].push(value[key2] ? value[key2] : value);
+                }
+                else {
+                    op.push(value[key2] ? value[key2] : value);
+                }
             }
         }
         else {

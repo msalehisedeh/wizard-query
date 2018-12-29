@@ -1,6 +1,6 @@
 {
   "name": "wizard-query",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "license": "MIT",
   "scripts": {
     "ng": "ng",
@@ -15,6 +15,7 @@
     "json",
     "xml",
     "jsonpath",
+    "json-path",
     "tree traversal",
     "node-query",
     "object-query",

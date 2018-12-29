@@ -111,6 +111,9 @@ var WizardQueryService = /** @class */ (function () {
                                 if (r_1) {
                                     t_1.push(x);
                                 }
+                                else {
+                                    x = undefined;
+                                }
                             }
                         }
                         else {
@@ -124,6 +127,9 @@ var WizardQueryService = /** @class */ (function () {
                                 });
                                 if (r_2) {
                                     t_1.push(item);
+                                }
+                                else {
+                                    x = undefined;
                                 }
                             }
                             else {
@@ -164,11 +170,34 @@ var WizardQueryService = /** @class */ (function () {
                             if (r_3) {
                                 t_2.push(item);
                             }
+                            else {
+                                x = undefined;
+                            }
                         }
                     });
                     x = t_2;
+                    result = x;
                 }
-                result = x;
+                else if (x) {
+                    if (subkey.validated) {
+                        /** @type {?} */
+                        var r_4 = true;
+                        subkey.validated.map(function (v) {
+                            if (v(x) == false) {
+                                r_4 = false;
+                            }
+                        });
+                        if (r_4) {
+                            result = x;
+                        }
+                        else {
+                            x = undefined;
+                        }
+                    }
+                    else {
+                        result = x;
+                    }
+                }
             }
             else if (node && (typeof node === 'string') && subkey.key.length) {
                 result = [];
@@ -325,14 +354,21 @@ var WizardQueryService = /** @class */ (function () {
                 delete operation['temp'];
             }
             else if (opk && (opk instanceof Array) === false) {
-                opk = [opk];
-                op[key2] = opk;
+                operation.result[path][key2] = [opk];
+                op = operation.result[path];
             }
+            value = this._normalize(value, action.deepXml);
             if (op[key2]) {
-                op[key2].push(this._normalize(value, action.deepXml));
+                op[key2].push(value[key2] ? value[key2] : value);
             }
             else {
-                op.push(this._normalize(value, action.deepXml));
+                if ((op instanceof Array) === false) {
+                    operation.result[path] = [op];
+                    operation.result[path].push(value[key2] ? value[key2] : value);
+                }
+                else {
+                    op.push(value[key2] ? value[key2] : value);
+                }
             }
         }
         else {
