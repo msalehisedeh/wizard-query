@@ -456,6 +456,7 @@ var WizardQueryService = /** @class */ (function () {
                 in: action.in,
                 deepXml: action.deepXml,
                 join: action.join,
+                handler: action.handler,
                 queryItems: (action.path instanceof Array) ? action.path.length : 1
             }, path);
         }
@@ -472,6 +473,7 @@ var WizardQueryService = /** @class */ (function () {
                                 in: opkeyi_1.in + item,
                                 deepXml: opkeyi_1.deepXml,
                                 join: opkeyi_1.join,
+                                handler: opkeyi_1.handler,
                                 queryItems: (opkeyi_1.path instanceof Array) ? opkeyi_1.path.length : 1
                             });
                         });
@@ -482,6 +484,7 @@ var WizardQueryService = /** @class */ (function () {
                             in: opkeyi_1.in + source,
                             deepXml: action.deepXml,
                             join: opkeyi_1.join,
+                            handler: opkeyi_1.handler,
                             queryItems: (opkeyi_1.path instanceof Array) ? opkeyi_1.path.length : 1
                         });
                     }
@@ -521,7 +524,7 @@ var WizardQueryService = /** @class */ (function () {
      */
     function (promise, operation, action, cacheNamed) {
         var _this = this;
-        if (!action.handle) {
+        if (!action.handler) {
             action.handler = function (node, path, value) { return value; };
         }
         this.select(action.path, action.in, action.deepXml, action.handler).subscribe(function (data) {
@@ -544,6 +547,7 @@ var WizardQueryService = /** @class */ (function () {
                                     in: operationalKey_1.in + content,
                                     deepXml: operationalKey_1.deepXml,
                                     join: operationalKey_1.join,
+                                    handler: operationalKey_1.handler,
                                     queryItems: (operationalKey_1.path instanceof Array) ? operationalKey_1.path.length : 1
                                 });
                             });
@@ -569,6 +573,7 @@ var WizardQueryService = /** @class */ (function () {
                                     path: operationalKey.path,
                                     in: operationalKey.in + content,
                                     deepXml: operationalKey.deepXml,
+                                    handler: operationalKey.handler,
                                     queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                 });
                             }
@@ -603,7 +608,10 @@ var WizardQueryService = /** @class */ (function () {
                 }
             }
         }, function (error) {
-            promise.error('failed to query ' + action.path);
+            promise.error({
+                message: 'failed to query ' + action.path,
+                reason: error.message ? error.message : error
+            });
             action.queryItems--;
             if (action.queryItems === 0) {
                 _this._triggerResult(promise, operation.result);
@@ -806,6 +814,7 @@ var WizardQueryService = /** @class */ (function () {
             in: chainQuery.in,
             deepXml: chainQuery.deepXml,
             join: chainQuery.join,
+            handler: chainQuery.handler,
             queryItems: size
         });
         return dataStore;
@@ -963,6 +972,32 @@ var WizardQueryComponent = /** @class */ (function () {
         configurable: true
     });
     /**
+     * @param {?} content
+     * @return {?}
+     */
+    WizardQueryComponent.prototype.parseFunctions = /**
+     * @param {?} content
+     * @return {?}
+     */
+    function (content) {
+        var _this = this;
+        if (content instanceof Array) {
+            content.map(function (item) {
+                _this.parseFunctions(item);
+            });
+        }
+        else if (typeof content === 'object') {
+            Object.keys(content).map(function (key) {
+                if (key === 'handler') {
+                    content[key] = new Function(content[key])();
+                }
+                else {
+                    _this.parseFunctions(content[key]);
+                }
+            });
+        }
+    };
+    /**
      * @param {?} text
      * @return {?}
      */
@@ -972,15 +1007,32 @@ var WizardQueryComponent = /** @class */ (function () {
      */
     function (text) {
         var _this = this;
-        /** @type {?} */
-        var content = JSON.parse(text.value);
-        this.queryService.chainSelect(content).subscribe(function (success) {
-            if (success) {
-                _this.data = success;
+        try {
+            /** @type {?} */
+            var content = JSON.parse(text.value);
+            this.parseFunctions(content);
+            if (content instanceof Array) {
+                this.queryService.arraySelect(content).subscribe(function (success) {
+                    if (success) {
+                        _this.data = success;
+                    }
+                }, function (error) {
+                    _this.data = { alert: error };
+                });
             }
-        }, function (error) {
-            _this.data = error;
-        });
+            else {
+                this.queryService.chainSelect(content).subscribe(function (success) {
+                    if (success) {
+                        _this.data = success;
+                    }
+                }, function (error) {
+                    _this.data = { alert: error };
+                });
+            }
+        }
+        catch (err) {
+            this.data = { alert: err.message };
+        }
     };
     WizardQueryComponent.decorators = [
         { type: Component, args: [{
@@ -1024,7 +1076,7 @@ var WizardQueryDirective = /** @class */ (function () {
                             _this.onQueryResult.emit(success);
                         }
                     }, function (error) {
-                        _this.onQueryResult.emit(error);
+                        _this.onQueryResult.emit({ alert: error });
                     });
                 }
                 else {
@@ -1033,7 +1085,7 @@ var WizardQueryDirective = /** @class */ (function () {
                             _this.onQueryResult.emit(success);
                         }
                     }, function (error) {
-                        _this.onQueryResult.emit(error);
+                        _this.onQueryResult.emit({ alert: error });
                     });
                 }
             }

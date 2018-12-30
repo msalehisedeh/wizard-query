@@ -32,7 +32,7 @@ export class WizardQueryDirective {
                         }
                     },
                     (error) => {
-                        this.onQueryResult.emit(error);
+                        this.onQueryResult.emit({alert: error});
                     }
                 );
             } else {
@@ -43,7 +43,7 @@ export class WizardQueryDirective {
                         }
                     },
                     (error) => {
-                        this.onQueryResult.emit(error);
+                        this.onQueryResult.emit({alert: error});
                     }
                 );
             }

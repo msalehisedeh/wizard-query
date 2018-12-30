@@ -412,6 +412,7 @@ class WizardQueryService {
                 in: action.in,
                 deepXml: action.deepXml,
                 join: action.join,
+                handler: action.handler,
                 queryItems: (action.path instanceof Array) ? action.path.length : 1
             }, path);
         }
@@ -428,6 +429,7 @@ class WizardQueryService {
                                 in: opkeyi.in + item,
                                 deepXml: opkeyi.deepXml,
                                 join: opkeyi.join,
+                                handler: opkeyi.handler,
                                 queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                             });
                         });
@@ -438,6 +440,7 @@ class WizardQueryService {
                             in: opkeyi.in + source,
                             deepXml: action.deepXml,
                             join: opkeyi.join,
+                            handler: opkeyi.handler,
                             queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                         });
                     }
@@ -469,7 +472,7 @@ class WizardQueryService {
      * @return {?}
      */
     _queryIteration(promise, operation, action, cacheNamed) {
-        if (!action.handle) {
+        if (!action.handler) {
             action.handler = (node, path, value) => value;
         }
         this.select(action.path, action.in, action.deepXml, action.handler).subscribe((data) => {
@@ -492,6 +495,7 @@ class WizardQueryService {
                                     in: operationalKey.in + content,
                                     deepXml: operationalKey.deepXml,
                                     join: operationalKey.join,
+                                    handler: operationalKey.handler,
                                     queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                 });
                             });
@@ -517,6 +521,7 @@ class WizardQueryService {
                                     path: operationalKey.path,
                                     in: operationalKey.in + content,
                                     deepXml: operationalKey.deepXml,
+                                    handler: operationalKey.handler,
                                     queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                 });
                             }
@@ -551,7 +556,10 @@ class WizardQueryService {
                 }
             }
         }, (error) => {
-            promise.error('failed to query ' + action.path);
+            promise.error({
+                message: 'failed to query ' + action.path,
+                reason: error.message ? error.message : error
+            });
             action.queryItems--;
             if (action.queryItems === 0) {
                 this._triggerResult(promise, operation.result);
@@ -722,6 +730,7 @@ class WizardQueryService {
             in: chainQuery.in,
             deepXml: chainQuery.deepXml,
             join: chainQuery.join,
+            handler: chainQuery.handler,
             queryItems: size
         });
         return dataStore;
@@ -847,19 +856,57 @@ class WizardQueryComponent {
         }
     }
     /**
+     * @param {?} content
+     * @return {?}
+     */
+    parseFunctions(content) {
+        if (content instanceof Array) {
+            content.map((item) => {
+                this.parseFunctions(item);
+            });
+        }
+        else if (typeof content === 'object') {
+            Object.keys(content).map((key) => {
+                if (key === 'handler') {
+                    content[key] = new Function(content[key])();
+                }
+                else {
+                    this.parseFunctions(content[key]);
+                }
+            });
+        }
+    }
+    /**
      * @param {?} text
      * @return {?}
      */
     executeQuery(text) {
-        /** @type {?} */
-        const content = JSON.parse(text.value);
-        this.queryService.chainSelect(content).subscribe((success) => {
-            if (success) {
-                this.data = success;
+        try {
+            /** @type {?} */
+            const content = JSON.parse(text.value);
+            this.parseFunctions(content);
+            if (content instanceof Array) {
+                this.queryService.arraySelect(content).subscribe((success) => {
+                    if (success) {
+                        this.data = success;
+                    }
+                }, (error) => {
+                    this.data = { alert: error };
+                });
             }
-        }, (error) => {
-            this.data = error;
-        });
+            else {
+                this.queryService.chainSelect(content).subscribe((success) => {
+                    if (success) {
+                        this.data = success;
+                    }
+                }, (error) => {
+                    this.data = { alert: error };
+                });
+            }
+        }
+        catch (err) {
+            this.data = { alert: err.message };
+        }
     }
 }
 WizardQueryComponent.decorators = [
@@ -903,7 +950,7 @@ class WizardQueryDirective {
                         this.onQueryResult.emit(success);
                     }
                 }, (error) => {
-                    this.onQueryResult.emit(error);
+                    this.onQueryResult.emit({ alert: error });
                 });
             }
             else {
@@ -912,7 +959,7 @@ class WizardQueryDirective {
                         this.onQueryResult.emit(success);
                     }
                 }, (error) => {
-                    this.onQueryResult.emit(error);
+                    this.onQueryResult.emit({ alert: error });
                 });
             }
         }

@@ -12,21 +12,24 @@ export class AppComponent {
       label:'Document .xml Extention',
       query: {
         path: "book[@.category=='WEB' && @.price > 30].description[ @.indexOf('linguistic') > 0]",
-        in: "http://localhost:4200/assets/sample.xml"
+        in: "http://localhost:4200/assets/sample.xml",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}"
       }
     },
     {
       label:'Document .xml Extention order by',
       query: {
         path: "book[order-by: title.#text ~DES].description",
-        in: "http://localhost:4200/assets/sample.xml"
+        in: "http://localhost:4200/assets/sample.xml",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}"
       }
     },
     {
       label:'Document .json Extention',
       query: {
         path: "[@.category =='WEB'][order-by: title.#text ~DES].description",
-        in: "http://localhost:4200/assets/sampleJ.json"
+        in: "http://localhost:4200/assets/sampleJ.json",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}"
       }
     },
     {
@@ -38,10 +41,12 @@ export class AppComponent {
           "market[@.indexOf('books') > 0]": {
             path: "library",
             in: "",
+            handler: "return function(node, path, value){console.log(node, path, value); return value;}",
             join: {
               "library": {
                 path: ["author","year"],
-                in: ""
+                in: "",
+                handler: "return function(node, path, value){console.log(node, path, value); return value;}"
               }
             }
           }
@@ -53,10 +58,12 @@ export class AppComponent {
       query: {
         path: "info",
         in: "http://localhost:4200/assets/sample2.xml",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}",
         join: {
           info: {
             path: ["ratings.rate[ @ > 3]", "[@.category=='WEB'].description"],
-            in: ""
+            in: "",
+            handler: "return function(node, path, value){console.log(node, path, value); return value;}"
           }
         }
       }
@@ -65,21 +72,24 @@ export class AppComponent {
       label:'Document .txt Extention',
       query: {
         path: ["speech","common"],
-        in: "http://localhost:4200/assets/sample3.txt"
+        in: "http://localhost:4200/assets/sample3.txt",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}"
       }
     },
     {
       label:'Plain text No Extention',
       query: {
         path: ["speech","common"],
-        in: "http://localhost:4200/assets/sample4"
+        in: "http://localhost:4200/assets/sample4",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}"
       }
     },
     {
       label:'HTML content No Extention',
       query: {
         path: "head.title",
-        in: "http://localhost:4200/assets/sample5"
+        in: "http://localhost:4200/assets/sample5",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}"
       }
     },
     {
@@ -91,6 +101,7 @@ export class AppComponent {
           'article:RelatedToolsPath'
         ],
         in: "http://localhost:4200/assets/article.xml",
+        handler: "return function(node, path, value){console.log(node, path, value); return value;}",
         deepXml: true,
         join: {
           'article:AdditionalPath': {
@@ -98,7 +109,8 @@ export class AppComponent {
               'ref:Title',
               'ref:Links.ref:Link[order-by: ref:LinkText ~ASC]'
             ],
-            in: '/assets/'
+            in: '/assets/',
+            handler: "return function(node, path, value){console.log(node, path, value); return value;}"
           },
           'article:RelatedToolsPath': {
             path: [

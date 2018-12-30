@@ -406,6 +406,7 @@ export class WizardQueryService {
                     in: action.in,
                     deepXml: action.deepXml,
                     join: action.join,
+                    handler: action.handler,
                     queryItems: (action.path instanceof Array) ? action.path.length : 1
                 },
                 path
@@ -430,6 +431,7 @@ export class WizardQueryService {
                                             in: opkeyi.in + item,
                                             deepXml: opkeyi.deepXml,
                                             join: opkeyi.join,
+                                            handler: opkeyi.handler,
                                             queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                                         }
                                     );
@@ -445,6 +447,7 @@ export class WizardQueryService {
                                     in: opkeyi.in + source,
                                     deepXml: action.deepXml,
                                     join: opkeyi.join,
+                                    handler: opkeyi.handler,
                                     queryItems: (opkeyi.path instanceof Array) ? opkeyi.path.length : 1
                                 }
                             );
@@ -483,7 +486,7 @@ export class WizardQueryService {
         action: any,
         cacheNamed?: string) {
 
-        if (!action.handle) {
+        if (!action.handler) {
             action.handler = (node: any, path: string, value: any) => value;
         }
         this.select(action.path, action.in, action.deepXml, action.handler).subscribe(
@@ -504,6 +507,7 @@ export class WizardQueryService {
                                         in: operationalKey.in + content,
                                         deepXml: operationalKey.deepXml,
                                         join: operationalKey.join,
+                                        handler: operationalKey.handler,
                                         queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                     });
                                 });
@@ -529,6 +533,7 @@ export class WizardQueryService {
                                             path: operationalKey.path,
                                             in: operationalKey.in + content,
                                             deepXml: operationalKey.deepXml,
+                                            handler: operationalKey.handler,
                                             queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
                                         }
                                     );
@@ -562,7 +567,10 @@ export class WizardQueryService {
                 }
             },
             (error: any) => {
-                promise.error('failed to query ' + action.path);
+                promise.error({
+                    message: 'failed to query ' + action.path,
+                    reason: error.message ? error.message : error
+                });
                 action.queryItems--;
                 if (action.queryItems === 0) {
                     this._triggerResult(promise, operation.result);
@@ -660,31 +668,31 @@ export class WizardQueryService {
                 }
             }
             if (xml.childNodes && xml.childNodes.length) {
-            for (let i = 0; i < xml.childNodes.length; i++) {
-                const item = xml.childNodes[i];
-                const nodeName = item.nodeName;
+                for (let i = 0; i < xml.childNodes.length; i++) {
+                    const item = xml.childNodes[i];
+                    const nodeName = item.nodeName;
 
-                if (obj[nodeName] === undefined) {
-                    const fragment = this._xml2json(item);
-                    if (fragment) {
-                    obj[nodeName] = fragment;
+                    if (obj[nodeName] === undefined) {
+                        const fragment = this._xml2json(item);
+                        if (fragment) {
+                        obj[nodeName] = fragment;
+                        }
+                    } else {
+                        if (obj[nodeName].push === undefined) {
+                            const old = obj[nodeName];
+
+                            obj[nodeName] = [];
+                            obj[nodeName].push(old);
+                        }
+                        const fragment = this._xml2json(item);
+                        if (fragment) {
+                            obj[nodeName].push(fragment);
+                        }
                     }
-                } else {
-                if (obj[nodeName].push === undefined) {
-                    const old = obj[nodeName];
-
-                    obj[nodeName] = [];
-                    obj[nodeName].push(old);
                 }
-                const fragment = this._xml2json(item);
-                if (fragment) {
-                    obj[nodeName].push(fragment);
-                }
-                }
-            }
             } else {
-            const text = xml.textContent.trim().replace(/(?:\r\n|\r|\n|\t)/g, '');
-            obj = text.length ? text : undefined;
+                const text = xml.textContent.trim().replace(/(?:\r\n|\r|\n|\t)/g, '');
+                obj = text.length ? text : undefined;
             }
             return obj;
         } catch (e) {
@@ -722,6 +730,7 @@ export class WizardQueryService {
                 in: chainQuery.in,
                 deepXml: chainQuery.deepXml,
                 join: chainQuery.join,
+                handler: chainQuery.handler,
                 queryItems: size
             }
         );

@@ -43,17 +43,55 @@ export class WizardQueryComponent {
   constructor(private queryService: WizardQueryService) {
   }
 
-  executeQuery(text: any) {
-    const content = JSON.parse(text.value);
-    this.queryService.chainSelect(content).subscribe(
-      (success) => {
-        if(success) {
-          this.data = success;
+  private parseFunctions(content: any) {
+    if (content instanceof Array) {
+      content.map(
+        (item) => {
+          this.parseFunctions(item);
         }
-      },
-      (error) => {
-        this.data = error;
+      )
+    } else if (typeof content === 'object') {
+      Object.keys(content).map(
+        (key) => {
+          if (key === 'handler') {
+            content[key] = new Function(content[key])();
+          } else {
+            this.parseFunctions(content[key] )
+          }
+        }
+      );
+    }
+  }
+
+  executeQuery(text: any) {
+    try {
+      const content = JSON.parse(text.value);
+      this.parseFunctions(content)
+      if (content instanceof Array) {
+        this.queryService.arraySelect(content).subscribe(
+          (success) => {
+            if(success) {
+              this.data = success;
+            }
+          },
+          (error) => {
+            this.data = {alert: error};
+          }
+        );
+      } else {
+        this.queryService.chainSelect(content).subscribe(
+          (success) => {
+            if(success) {
+              this.data = success;
+            }
+          },
+          (error) => {
+            this.data = {alert: error};
+          }
+        );
       }
-    );
+    }catch (err) {
+      this.data = {alert: err.message};
+    }
   }
 }

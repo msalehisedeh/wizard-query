@@ -12,8 +12,8 @@ If you do not want to directly use wizardQueryService, you can use the wizardQue
 
 | Method     | Arguments                 |Description                                                           |
 |------------|---------------------------|----------------------------------------------------------------------|
-|select      |`path, from, deepXml, clause`|Use a single path or a list of JSON qualifying paths to access content.|
-|arraySelect | `{path: '', in:'', deepXml: true, handler: afunction}` |  This method will invoke select(). But first, requests with similar paths will be merged into one call. deepXml attribute is optional. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. the handler function is optional.|
+|select      |`path`, `from`, `deepXml`, `clause`|Use a single path or a list of JSON qualifying paths to access content.|
+|arraySelect | `{path: '', in:'', deepXml: true}`, `clause` |  This method will invoke select(). But first, requests with similar paths will be merged into one call. deepXml attribute is optional. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. the clause function is optional.|
 |chainSelect | `{path: ['path1','path2'], in: 'url1', deepXml: true, handler: afunction, join: {path1: {path:'px', in:'urlx', handler: anotherfunction, join: {}}, path2: {path: 'py', in: 'urly'}}}` |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. deepXml attribute is optional. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. the handler function and join attributes are optional.|
 
 
@@ -210,21 +210,24 @@ this.select(
 	}
 );
 ```
-# Releases
+## Releases
 
-## Version 1.1.2
+### Version 1.1.3
+Modified the component to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. Also, if you type in a handler in the JSON query, it can be parsed and become functional as well. Also, fixed a type in service which was not taking the handler function in chainSelect.
+
+### Version 1.1.2
 Modified the directive to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object.
 
-## Version 1.1.1
+### Version 1.1.1
 Fixed an internal logic that was not returning correct results under special circumstances.
 
-## Version 1.1.0
+### Version 1.1.0
 added deepXml flag to enable possibility of accessing cdata-section of xml content as a structure when cdata by itself is a html fragment.
 
-## Version 1.0.1
+### Version 1.0.1
 corrections to README file.
 
-## Version 1.0.0
+### Version 1.0.0
 initial functionality.
 
 
