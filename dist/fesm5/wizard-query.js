@@ -1018,13 +1018,24 @@ var WizardQueryDirective = /** @class */ (function () {
             var _this = this;
             this.query = info;
             if (this.query) {
-                this.queryService.chainSelect(this.query).subscribe(function (success) {
-                    if (success) {
-                        _this.onQueryResult.emit(success);
-                    }
-                }, function (error) {
-                    _this.onQueryResult.emit(error);
-                });
+                if (this.query instanceof Array) {
+                    this.queryService.arraySelect(this.query).subscribe(function (success) {
+                        if (success) {
+                            _this.onQueryResult.emit(success);
+                        }
+                    }, function (error) {
+                        _this.onQueryResult.emit(error);
+                    });
+                }
+                else {
+                    this.queryService.chainSelect(this.query).subscribe(function (success) {
+                        if (success) {
+                            _this.onQueryResult.emit(success);
+                        }
+                    }, function (error) {
+                        _this.onQueryResult.emit(error);
+                    });
+                }
             }
             else {
                 this.onQueryResult.emit(undefined);

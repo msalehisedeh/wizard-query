@@ -17,7 +17,7 @@ If you do not want to directly use wizardQueryService, you can use the wizardQue
 |chainSelect | `{path: ['path1','path2'], in: 'url1', deepXml: true, handler: afunction, join: {path1: {path:'px', in:'urlx', handler: anotherfunction, join: {}}, path2: {path: 'py', in: 'urly'}}}` |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. deepXml attribute is optional. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. the handler function and join attributes are optional.|
 
 
-If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path. For example: select(['books.book.title', 'books.book.author'], '/example1.xml', false) will result in {'books.book.title': [], 'books.book.author': []}. 
+If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path. For example: `select(['books.book.title', 'books.book.author'], '/example1.xml', false)` will result in `{'books.book.title': [], 'books.book.author': []}`. 
 
 
 if deepXml is set to true, the cdata-sections will also be parsed when parsing an xml content.
@@ -30,7 +30,7 @@ The wizard service allows you to set a default base path that prepends to all qu
 
 
 ## Sample Use
-To use the directive, load it on any tag as follows:
+To use the directive, load it on any tag (H, SPAN, I, ...). It does not matter what would host this directive. Load it as follows:
 ```javascript
 <div 
 	[wizardQuery]="myQuery" 
@@ -51,7 +51,11 @@ private publicationHandler(node: any, path: string, value: any) {
 }
 
 // will return the entire node structure in sample1.xml
-this.select('', 'sample1.xml', false, this.publicationHandler).subscribe(
+this.select(
+	'', /* select all */
+	'sample1.xml', /* in this file */
+	false, /* do not parse cdata section */
+	this.publicationHandler).subscribe(
 	(success) => {
 		if(success) {
 			this.result = success;
@@ -63,7 +67,11 @@ this.select('', 'sample1.xml', false, this.publicationHandler).subscribe(
 );
 
 // will return the entire book contents in sample1.xml
-this.select('books.book', 'sample1.xml', false, this.publicationHandler).subscribe(
+this.select(
+	'books.book', /* select book of books */
+	'sample1.xml', /* in this file */
+	false, /* do not parse cdata section */
+	this.publicationHandler).subscribe(
 	(success) => {
 		if(success) {
 			this.result = success;
@@ -74,7 +82,8 @@ this.select('books.book', 'sample1.xml', false, this.publicationHandler).subscri
 	}
 );
 
-// will return author and title of books in sample1 and entire book contents in sample2
+// will return author and title of books in sample1 and 
+// entire book contents in sample2
 this.wizardService.arraySelect(
 	[
 		{path: 'books.book',in: 'sample2'},
@@ -92,9 +101,9 @@ this.wizardService.arraySelect(
 	}
 );
 
-// will chain into urls provided in each books.book and returns title and author 
-// of books listed in the secondary level files or API responses located in '/samples/books/' 
-// directory.
+// will chain into urls provided in each books.book in sample1.xml and 
+// returns title and author of books listed in the secondary level files
+// or API responses located in '/samples/books/' directory.
 this.wizardService.chainSelect({
 	path: 'books.book',
 	in: 'sample1.xml',
@@ -143,8 +152,9 @@ this.select(
 The syntax is simple. '@' signifies the current node and statement inside bracket [] has to be a valid JavaScript conditional statement. You can still use the handler method in combination with special syntax.  In such case you can use the handler to reformat the value. You can cascade bracket filters. you can also use bracket filter syntax to sort result. The syntax of sorting is [order-by: json-path ~ DES/ASC] if you leave out the last arggumet of DES or ASC, then by default the list will be sorted on ASC order.
 
 ```javascript
-// will return list of titles of books published after year 2000 and are under WEB category
-// sorted out in descending fashion by their author name.
+// will return list of titles of books published after year 2000 and 
+// are under WEB category sorted out in descending fashion by their 
+// author name.
 this.select(
     "books.book[@.year > 2000][@.category=='WEB'][order-by: author.name ~DES].title",
     'sample1.xml',
@@ -201,6 +211,9 @@ this.select(
 );
 ```
 # Releases
+
+## Version 1.1.2
+Modified the directive to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object.
 
 ## Version 1.1.1
 Fixed an internal logic that was not returning correct results under special circumstances.

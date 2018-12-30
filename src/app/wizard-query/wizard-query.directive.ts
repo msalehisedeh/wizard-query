@@ -24,16 +24,29 @@ export class WizardQueryDirective {
     set wizardQuery(info: any) {
         this.query = info;
         if (this.query) {
-            this.queryService.chainSelect(this.query).subscribe(
-                (success) => {
-                    if(success) {
-                        this.onQueryResult.emit(success);
+            if (this.query instanceof Array) {
+                this.queryService.arraySelect(this.query).subscribe(
+                    (success) => {
+                        if(success) {
+                            this.onQueryResult.emit(success);
+                        }
+                    },
+                    (error) => {
+                        this.onQueryResult.emit(error);
                     }
-                },
-                (error) => {
-                    this.onQueryResult.emit(error);
-                }
-            );
+                );
+            } else {
+                this.queryService.chainSelect(this.query).subscribe(
+                    (success) => {
+                        if(success) {
+                            this.onQueryResult.emit(success);
+                        }
+                    },
+                    (error) => {
+                        this.onQueryResult.emit(error);
+                    }
+                );
+            }
         } else {
             this.onQueryResult.emit(undefined);
         }
