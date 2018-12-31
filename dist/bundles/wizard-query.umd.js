@@ -15,6 +15,46 @@
             this.logEnabled = false;
         }
         /**
+         * @return {?}
+         */
+        WizardQueryService.prototype._globalFunctions = /**
+         * @return {?}
+         */
+            function () {
+                return "function reverse(a) {\n" +
+                    " if (a instanceof Array) {\n" +
+                    "  return a.reverse();\n" +
+                    " \n} else if (typeof a === 'string') {\n" +
+                    "  return a.split('').reverse().join('');\n" +
+                    " } else return a;\n" +
+                    "}\n" +
+                    "function sum(a,b) {\n" +
+                    " var total = 0;\n" +
+                    " if (a instanceof Array) { \n" +
+                    "  a.map(function(k) {total += sum(k, b);});\n" +
+                    " } else if (typeof a === 'object') {\n" +
+                    "   if (b.indexOf('.')>0){\n" +
+                    "     var t = a; b.split('.').map(function(k){total+=sum(t[k],b.substring(k.length+1))});" +
+                    "   } else if(a[b]) {\n" +
+                    "     var t = a[b];\n" +
+                    "     total += (typeof t === 'number') ? t : parseFloat(t);\n" +
+                    "   } \n" +
+                    " } \n" +
+                    " return total;\n" +
+                    "}\n" +
+                    "function count(a,b) {\n" +
+                    " var total = 0;\n" +
+                    " if (a instanceof Array) { \n" +
+                    "  a.map(function(k) {total += count(k, b);});\n" +
+                    " } else if (typeof a === 'object') {\n" +
+                    "  Object.keys(a).map(function(k){ total += count(a[k],b);});\n" +
+                    " } else if (typeof a === 'string') {\n" +
+                    "   total = a.split(b).length - 1;\n" +
+                    " } else if (a === b) {total++;}\n" +
+                    " return total;\n" +
+                    "}\n";
+            };
+        /**
          * @param {?} value
          * @param {?} deepXml
          * @return {?}
@@ -103,8 +143,15 @@
                                         /** @type {?} */
                                         var r_1 = true;
                                         subkey.validated.map(function (v) {
-                                            if (v(x) == false) {
-                                                r_1 = false;
+                                            /** @type {?} */
+                                            var z = v(x);
+                                            if (typeof z === 'boolean') {
+                                                if (z == false) {
+                                                    r_1 = false;
+                                                }
+                                            }
+                                            else {
+                                                x = z;
                                             }
                                         });
                                         if (r_1) {
@@ -120,8 +167,15 @@
                                         /** @type {?} */
                                         var r_2 = true;
                                         subkey.validated.map(function (v) {
-                                            if (v(item) == false) {
-                                                r_2 = false;
+                                            /** @type {?} */
+                                            var z = v(item);
+                                            if (typeof z === 'boolean') {
+                                                if (z == false) {
+                                                    r_2 = false;
+                                                }
+                                            }
+                                            else {
+                                                item = z;
                                             }
                                         });
                                         if (r_2) {
@@ -162,8 +216,15 @@
                                     /** @type {?} */
                                     var r_3 = true;
                                     subkey.validated.map(function (v) {
-                                        if (v(item) == false) {
-                                            r_3 = false;
+                                        /** @type {?} */
+                                        var z = v(item);
+                                        if (typeof z === 'boolean') {
+                                            if (z == false) {
+                                                r_3 = false;
+                                            }
+                                        }
+                                        else {
+                                            item = z;
                                         }
                                     });
                                     if (r_3) {
@@ -182,8 +243,15 @@
                                 /** @type {?} */
                                 var r_4 = true;
                                 subkey.validated.map(function (v) {
-                                    if (v(x) == false) {
-                                        r_4 = false;
+                                    /** @type {?} */
+                                    var z = v(x);
+                                    if (typeof z === 'boolean') {
+                                        if (z == false) {
+                                            r_4 = false;
+                                        }
+                                    }
+                                    else {
+                                        x = z;
                                     }
                                 });
                                 if (r_4) {
@@ -626,6 +694,7 @@
          * @return {?}
          */
             function (key) {
+                var _this = this;
                 /** @type {?} */
                 var list = key.split('.');
                 /** @type {?} */
@@ -675,14 +744,49 @@
                                 };
                             }
                             else {
-                                filter = 'return function (data) { var x = false; try{ x = (' + filter + '); }catch(e){} return x;}';
-                                object_1['validated'].push(new Function(filter)());
+                                /** @type {?} */
+                                var t = filter.indexOf('&&') > 0 || filter.indexOf('||') > 0;
+                                /** @type {?} */
+                                var f = 'return function (data) { \n';
+                                f += _this._globalFunctions();
+                                f += 'var x = false;\n try{\n x = ';
+                                f += (t ? '(' + filter + ')' : filter) + '; \n}catch(e){}\n return x;\n}';
+                                object_1['validated'].push(new Function(f)());
                             }
                         });
                         result.push(object_1);
                     }
                 });
                 return result;
+            };
+        /**
+         * @param {?} path
+         * @return {?}
+         */
+        WizardQueryService.prototype._handleSpecialCharacters = /**
+         * @param {?} path
+         * @return {?}
+         */
+            function (path) {
+                /** @type {?} */
+                var result = [];
+                path.split(']').map(function (item) {
+                    /** @type {?} */
+                    var bindex = item.indexOf('[');
+                    if (bindex >= 0) {
+                        /** @type {?} */
+                        var x = '';
+                        if (bindex > 0) {
+                            x += item.substring(0, bindex);
+                        }
+                        x += item.substring(bindex).replace(/\./g, '`');
+                        result.push(x);
+                    }
+                    else {
+                        result.push(item);
+                    }
+                });
+                return result.join(']');
             };
         /**
          * @param {?} path
@@ -700,18 +804,13 @@
                     result = [];
                     path.map(function (i) {
                         /** @type {?} */
-                        var x = i.replace(/([\[(])(.+?)([\])])/g, function (match, p1, p2, p3, offset, s) {
-                            return p1 + p2.replace(/\./g, '`') + p3;
-                        });
+                        var x = _this._handleSpecialCharacters(i);
                         result.push(_this._makeArguments(x));
                     });
                 }
                 else {
-                    path = path ? path : '';
                     /** @type {?} */
-                    var x = path.replace(/([\[(])(.+?)([\])])/g, function (match, p1, p2, p3, offset, s) {
-                        return p1 + p2.replace(/\./g, '`') + p3;
-                    });
+                    var x = this._handleSpecialCharacters(path);
                     result = this._makeArguments(x);
                 }
                 return result;

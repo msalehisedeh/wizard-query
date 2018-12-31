@@ -6,6 +6,7 @@ export declare class WizardQueryService {
     SERVICE_PATH: string;
     logEnabled: boolean;
     constructor(http: HttpClient);
+    private _globalFunctions();
     private _normalize(value, deepXml);
     private _valueOfJsonPath(path, data, deepXml, clause?);
     private _get(path);
@@ -16,6 +17,7 @@ export declare class WizardQueryService {
     private _subquery(promise, path, operation, action);
     private _queryIteration(promise, operation, action, cacheNamed?);
     private _makeArguments(key);
+    private _handleSpecialCharacters(path);
     private _prepareJsonPath(path);
     private _xml2json(xml);
     chainSelect(chainQuery: any): BehaviorSubject<any>;

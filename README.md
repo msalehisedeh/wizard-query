@@ -2,7 +2,9 @@
 
 Have you ever been in need of accessing data deeply nested in multitude of files? Have you thought of a tool that can help you dig deep in a chain of files to find what you are looking for? This wizard allows you to just do that.
 
-You can use this wizard to discover content or call the WizardQueryService through provided methods to have your application access and use data in the most efficient way. The wizard will automatically parse the target URL into JSON no matter what the target content is. The target could have extension (XML, HTML, JSON, ...) externsion or no extension at all. You can fetch content of a remote file or a site. To do so, begin with blank `''` as a JSON path of the root site page. this will reveal every node in object hierarchy of the target. look at the content and if you find something you want to get all the times, use its JSON path in your fixed query. if the target node value is pointing to another file, use a join query for the JSON path that resulted the target node with a blank `''` JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for deeply nested in multitude of files.
+You can use this wizard to discover content or call the WizardQueryService through provided methods to have your application access and use data in the most efficient way. The wizard will automatically parse the target URL into JSON no matter what the target content is. The target could have (XML, HTML, JSON, ...) externsion or no extension at all. You can fetch content of a remote file or a site. To do so, begin with blank `''` as a JSON path of the root page. This will reveal every node in object hierarchy of the target. Look at the content and if you find something you want to get all the times, use its JSON path in your fixed query. If the target node value is pointing to another file, use a join query for the JSON path that resulted the target node with a blank `''` JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for deeply nested in multitude of files.
+
+**I appreciate comments and ideas to make this tool versatile.**
 
 
 [Live Demo](https://wizard-query.stackblitz.io) | [Source code](https://github.com/msalehisedeh/wizard-query/tree/master/src/app) | [Comments/Requests](https://github.com/msalehisedeh/wizard-query/issues)
@@ -12,23 +14,31 @@ If you do not want to directly use the WizardQueryService, you can use the Wizar
 
 | Method     | Arguments                 |Description                                                           |
 |------------|---------------------------|----------------------------------------------------------------------|
-|select      |`path`, `from`, `deepXml`, `clause`|Use a single path or a list of JSON qualifying paths to access content. the clause function is optional.|
-|arraySelect | `{path: '', in:'', deepXml: true}`, `clause` |  This method will invoke select(). But first, requests with similar paths will be merged into one call. deepXml attribute is optional. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. the clause function is optional.|
-|chainSelect | `{path: ['path1','path2'], in: 'url1', deepXml: true, handler: afunction, join: {path1: {path:'px', in:'urlx', handler: anotherfunction, join: {}}, path2: {path: 'py', in: 'urly'}}}` |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. deepXml attribute is optional. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. the handler function and join attributes are optional.|
+|select      |`path`, `from`, `deepXml`, `clause`|Use a single path or a list of JSON qualifying paths to access content. The clause function is optional.|
+|arraySelect | `{path: '', in:'', deepXml: true}`, `clause` |  This method will invoke select(). But first, requests with similar paths will be merged into one call. deepXml attribute is optional. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. The clause function is optional.|
+|chainSelect | `{path: ['path1','path2'], in: 'url1', deepXml: true, handler: afunction, join: {path1: {path:'px', in:'urlx', handler: anotherfunction, join: {}}, path2: {path: 'py', in: 'urly'}}}` |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. `deepXml` attribute is optional. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. The handler function and join attributes are optional.|
 
 
 If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path. For example: `select(['books.book.title', 'books.book.author'], '/example1.xml', false)` will result in `{'books.book.title': [], 'books.book.author': []}`. 
 
 
-if deepXml is set to true, the cdata-sections in xml files will also be parsed when parsing a content.
+if `deepXml` is set to true, the cdata-sections in xml files will also be parsed when parsing a content.
 
 
-If a clause/handler argument is supplied, it will be invoked to further assist in filtering the query result. for example if certain category of books are required, the clause/handler function can look for a book category attribute and return the query result if acceptable or undefined if result should be filtered out of the result. You can use both handler function and filtering mechanism to manage generated results. In a certain situations that it is not possible to set up a filtering logic, I recommend using the handler mechanism in conjunction with the filtering. Fore example, if you have multiple attributes in a structure and you need to pick one based on the device user is using, you can use a handler to decide the resulting value based on key in JSON path to trigger a code to decide on attribute value based on user device. Or format a value based on the key!!
+If a clause/handler argument is supplied, it will be invoked to further assist in filtering the query result. For example if result should be filtered out of the result and if certain category of books are required, the clause/handler function can look for a book category attribute and return the query result if acceptable or undefined. You can use both handler function and query filtering mechanism to manage generated results. In a certain situations that it is not possible to set up a filtering logic, I recommend using the handler mechanism in conjunction with the query filtering mechanism. Fore example, if you have multiple attributes in a structure and you need to pick one based on the device user is using, you can use a handler to decide the resulting value based on key in JSON path to trigger a code to decide on attribute value based on user device. Or format a value based on the key!!
 
 
 The wizard service allows you to set a default base path `SERVICE_PATH` that prepends to all query URLs. By default it's value is blank. Note: If the subsequent URLs in a chain query point to different website URLs, do not set the base url value. If the subsequent URLs are absolute, do not pass value for 'in' attribute of join statement. the 'in' attribute of joint statement is prepended to the path of the subsequent file resulten in parent query.
 
 There is a `logEnabled` attribute that allows service to log additional information while running code. this attribute is set to false by default.
+
+## global functions
+You can use the following functions in query filtering mechanism.
+| Method        |args      |Description                                                              |
+|---------------|----------|-------------------------------------------------------------------------|
+| reverse(@)    |item      |Will return reverse order of item                                        |
+| count(@,'is') |item,value|Will count the number of 'is' in item                                    |
+| sum(@,'price')|item,key  |Will retuen total 'price' of item. if item is array total of price items.|
 
 
 ## Sample Use
@@ -48,14 +58,16 @@ To use the component which allows you to interactively discover the contents, do
 To use the service directly, call anyone of available methods as follows:
 ```javascript
 private publicationHandler(node: any, path: string, value: any) {
-	// examine the node and return the value if it should be included in final result.
+	// examine the node and return the value if it should be included 
+	// in final result.
+	//
 	// return undefined otherwise.
 }
 
-// will return the entire node structure in sample1.xml
+// will return the entire node structure in books.xml
 this.select(
 	'', /* select all */
-	'sample1.xml', /* in this file */
+	'books.xml', /* in this file */
 	false, /* do not parse cdata section */
 	this.publicationHandler).subscribe(
 	(success) => {
@@ -68,10 +80,10 @@ this.select(
 	}
 );
 
-// will return the entire book contents in sample1.xml
+// will return the entire book contents in books.xml
 this.select(
 	'books.book', /* select book of books */
-	'sample1.xml', /* in this file */
+	'books.xml', /* in this file */
 	false, /* do not parse cdata section */
 	this.publicationHandler).subscribe(
 	(success) => {
@@ -84,13 +96,13 @@ this.select(
 	}
 );
 
-// will return author and title of books in sample1 and 
-// entire book contents in sample2
+// will return author and title of books in scientific file and 
+// entire book contents in fictional file
 this.wizardService.arraySelect(
 	[
-		{path: 'books.book',in: 'sample2'},
-		{path: 'books.book.author',in: 'sample1'},
-		{path: 'books.book.title',in: 'sample1'}
+		{path: 'books.book',in: 'fictional'},
+		{path: 'books.book.author',in: 'scientific'},
+		{path: 'books.book.title',in: 'scientific'}
 	], this.publicationHandler
 ).subscribe(
 	(success) => {
@@ -103,16 +115,16 @@ this.wizardService.arraySelect(
 	}
 );
 
-// will chain into urls provided in each books.book in sample1.xml and 
+// will chain into urls provided in each books in marketplace.xml and 
 // returns title and author of books listed in the secondary level files
-// or API responses located in '/samples/books/' directory.
+// or API responses located in '/categories/books/' directory.
 this.wizardService.chainSelect({
-	path: 'books.book',
-	in: 'sample1.xml',
+	path: 'books',
+	in: 'marketplace.xml',
 	join: {
-		'books.book': {
+		'books': {
 		path: ['publication.title', 'publication.author'],
-		in: '/samples/books/',
+		in: '/categories/books/',
 		handler: this.publicationHandler
 	}
 }).subscribe(
@@ -127,17 +139,84 @@ this.wizardService.chainSelect({
 );
 ```
 
-Alternative to supplying of handler method to evaluate a query, special filtering syntax used in a JSON path will allow you to evaluate a node and filter it out of the result if the filter results in a boolean false. For example you can do the following call:
+Alternative to supplying of handler method to evaluate a query, special query filtering syntax used in a JSON path will allow you to evaluate a node and filter it out of the result if the filter results in a boolean false. For example you can do the following call:
 
 ```javascript
-// will return title of books with category WEB published 
-// after year 2000. and the book ratings grater than 3.5
+// will return book title with category WEB 
+// published after year 2000.
+// And the book ratings grater than 3.5
 this.select(
 	[
 		"books.book[@.category=='WEB' && @.year > 2000].title",
 		"books.book.ratings.rating[ @ > 3.5]"
 	],
-	'sample1.xml',
+	'books.xml',
+	false
+).subscribe(
+	(success) => {
+		if(success) {
+			this.result = success;
+		}
+	},
+	(error) => {
+		this.error = error;
+	}
+);
+
+// will return the first 3 characters of book title 
+// in uppercase and in reverse order.
+this.select(
+	"books.book.title[@.trim().substring(0,3).toUpperCase()][reverse(@)]",
+	'books.xml',
+	false
+).subscribe(
+	(success) => {
+		if(success) {
+			this.result = success;
+		}
+	},
+	(error) => {
+		this.error = error;
+	}
+);
+
+// will return total price of all books.
+this.select(
+	"[sum(@,'book.price')]",
+	'books.xml',
+	false
+).subscribe(
+	(success) => {
+		if(success) {
+			this.result = success;
+		}
+	},
+	(error) => {
+		this.error = error;
+	}
+);
+
+// will return number of times 'IS' is repeated in description of each book.
+this.select(
+	"book[ count(@.description.trim().toUpperCase(),'IS')]",
+	'books.xml',
+	false
+).subscribe(
+	(success) => {
+		if(success) {
+			this.result = success;
+		}
+	},
+	(error) => {
+		this.error = error;
+	}
+);
+
+// will return number of books with category WEB published 
+// after year 2000.
+this.select(
+	"books.book[@.category=='WEB'][@.year > 2000][@.length]",
+	'books.xml',
 	false
 ).subscribe(
 	(success) => {
@@ -159,7 +238,7 @@ The syntax is simple. '@' signifies the current node and statement inside bracke
 // author name.
 this.select(
     "books.book[@.year > 2000][@.category=='WEB'][order-by: author.name ~DES].title",
-    'sample1.xml',
+    'books.xml',
 	false
 ).subscribe(
 	(success) => {
@@ -178,8 +257,8 @@ You can search on a text node and for a particular phrase and get the sentence t
 For example:
 
 ```javascript
-// will return the sentence within description of books with category WEB published 
-// after year 2000 which contains 'discovered platinum' phrase.
+// will return the sentence within description of books with category WEB 
+// published after year 2000 which contains 'discovered platinum' phrase.
 this.select(
     "books.book[@.category=='WEB' && @.year > 2000].description.discovered platinum",
     'sample1.xml',
@@ -195,8 +274,9 @@ this.select(
 	}
 );
 
-// will return the entire description of books with category WEB published 
-// after year 2000 which contains 'discovered platinum' phrase.
+// will return the entire description of books with category WEB 
+// published after year 2000 which contains 'discovered platinum' 
+// phrase.
 this.select(
     "books.book[@.category=='WEB' && @.year > 2000].description[@.indexOf('discovered platinum') > -1]",
     'sample1.xml',
@@ -213,6 +293,9 @@ this.select(
 );
 ```
 ## Releases
+
+### Version 1.2.0
+added global functions to be used in query filtering syntax.
 
 ### Version 1.1.4
 I am a perfectionist and trying to make this tool perfect. modified the wizard component to parse handler function typed in query editor without explicit 'return function'. This way the query handler function looks more natural.

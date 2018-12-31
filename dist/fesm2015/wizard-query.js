@@ -19,6 +19,43 @@ class WizardQueryService {
         this.logEnabled = false;
     }
     /**
+     * @return {?}
+     */
+    _globalFunctions() {
+        return "function reverse(a) {\n" +
+            " if (a instanceof Array) {\n" +
+            "  return a.reverse();\n" +
+            " \n} else if (typeof a === 'string') {\n" +
+            "  return a.split('').reverse().join('');\n" +
+            " } else return a;\n" +
+            "}\n" +
+            "function sum(a,b) {\n" +
+            " var total = 0;\n" +
+            " if (a instanceof Array) { \n" +
+            "  a.map(function(k) {total += sum(k, b);});\n" +
+            " } else if (typeof a === 'object') {\n" +
+            "   if (b.indexOf('.')>0){\n" +
+            "     var t = a; b.split('.').map(function(k){total+=sum(t[k],b.substring(k.length+1))});" +
+            "   } else if(a[b]) {\n" +
+            "     var t = a[b];\n" +
+            "     total += (typeof t === 'number') ? t : parseFloat(t);\n" +
+            "   } \n" +
+            " } \n" +
+            " return total;\n" +
+            "}\n" +
+            "function count(a,b) {\n" +
+            " var total = 0;\n" +
+            " if (a instanceof Array) { \n" +
+            "  a.map(function(k) {total += count(k, b);});\n" +
+            " } else if (typeof a === 'object') {\n" +
+            "  Object.keys(a).map(function(k){ total += count(a[k],b);});\n" +
+            " } else if (typeof a === 'string') {\n" +
+            "   total = a.split(b).length - 1;\n" +
+            " } else if (a === b) {total++;}\n" +
+            " return total;\n" +
+            "}\n";
+    }
+    /**
      * @param {?} value
      * @param {?} deepXml
      * @return {?}
@@ -94,8 +131,15 @@ class WizardQueryService {
                                 /** @type {?} */
                                 let r = true;
                                 subkey.validated.map(v => {
-                                    if (v(x) == false) {
-                                        r = false;
+                                    /** @type {?} */
+                                    const z = v(x);
+                                    if (typeof z === 'boolean') {
+                                        if (z == false) {
+                                            r = false;
+                                        }
+                                    }
+                                    else {
+                                        x = z;
                                     }
                                 });
                                 if (r) {
@@ -111,8 +155,15 @@ class WizardQueryService {
                                 /** @type {?} */
                                 let r = true;
                                 subkey.validated.map(v => {
-                                    if (v(item) == false) {
-                                        r = false;
+                                    /** @type {?} */
+                                    const z = v(item);
+                                    if (typeof z === 'boolean') {
+                                        if (z == false) {
+                                            r = false;
+                                        }
+                                    }
+                                    else {
+                                        item = z;
                                     }
                                 });
                                 if (r) {
@@ -153,8 +204,15 @@ class WizardQueryService {
                             /** @type {?} */
                             let r = true;
                             subkey.validated.map(v => {
-                                if (v(item) == false) {
-                                    r = false;
+                                /** @type {?} */
+                                const z = v(item);
+                                if (typeof z === 'boolean') {
+                                    if (z == false) {
+                                        r = false;
+                                    }
+                                }
+                                else {
+                                    item = z;
                                 }
                             });
                             if (r) {
@@ -173,8 +231,15 @@ class WizardQueryService {
                         /** @type {?} */
                         let r = true;
                         subkey.validated.map(v => {
-                            if (v(x) == false) {
-                                r = false;
+                            /** @type {?} */
+                            const z = v(x);
+                            if (typeof z === 'boolean') {
+                                if (z == false) {
+                                    r = false;
+                                }
+                            }
+                            else {
+                                x = z;
                             }
                         });
                         if (r) {
@@ -620,14 +685,45 @@ class WizardQueryService {
                         };
                     }
                     else {
-                        filter = 'return function (data) { var x = false; try{ x = (' + filter + '); }catch(e){} return x;}';
-                        object['validated'].push(new Function(filter)());
+                        /** @type {?} */
+                        const t = filter.indexOf('&&') > 0 || filter.indexOf('||') > 0;
+                        /** @type {?} */
+                        let f = 'return function (data) { \n';
+                        f += this._globalFunctions();
+                        f += 'var x = false;\n try{\n x = ';
+                        f += (t ? '(' + filter + ')' : filter) + '; \n}catch(e){}\n return x;\n}';
+                        object['validated'].push(new Function(f)());
                     }
                 });
                 result.push(object);
             }
         });
         return result;
+    }
+    /**
+     * @param {?} path
+     * @return {?}
+     */
+    _handleSpecialCharacters(path) {
+        /** @type {?} */
+        let result = [];
+        path.split(']').map((item) => {
+            /** @type {?} */
+            const bindex = item.indexOf('[');
+            if (bindex >= 0) {
+                /** @type {?} */
+                let x = '';
+                if (bindex > 0) {
+                    x += item.substring(0, bindex);
+                }
+                x += item.substring(bindex).replace(/\./g, '`');
+                result.push(x);
+            }
+            else {
+                result.push(item);
+            }
+        });
+        return result.join(']');
     }
     /**
      * @param {?} path
@@ -640,18 +736,13 @@ class WizardQueryService {
             result = [];
             path.map((i) => {
                 /** @type {?} */
-                const x = i.replace(/([\[(])(.+?)([\])])/g, (match, p1, p2, p3, offset, s) => {
-                    return p1 + p2.replace(/\./g, '`') + p3;
-                });
+                const x = this._handleSpecialCharacters(i);
                 result.push(this._makeArguments(x));
             });
         }
         else {
-            path = path ? path : '';
             /** @type {?} */
-            const x = path.replace(/([\[(])(.+?)([\])])/g, (match, p1, p2, p3, offset, s) => {
-                return p1 + p2.replace(/\./g, '`') + p3;
-            });
+            const x = this._handleSpecialCharacters(path);
             result = this._makeArguments(x);
         }
         return result;
