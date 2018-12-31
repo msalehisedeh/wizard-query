@@ -54,9 +54,9 @@ export class WizardQueryComponent {
       Object.keys(content).map(
         (key) => {
           if (key === 'handler') {
-            content[key] = new Function(content[key])();
+            content[key] = new Function('return function' + content[key])();
           } else {
-            this.parseFunctions(content[key] )
+            this.parseFunctions(content[key]);
           }
         }
       );

@@ -2,17 +2,17 @@
 
 Have you ever been in need of accessing data deeply nested in multitude of files? Have you thought of a tool that can help you dig deep in a chain of files to find what you are looking for? This wizard allows you to just do that.
 
-You can use this wizard to discover content or call the service through provided methods to have your application access and use data in the most efficient way. the target URL could have extension (i.e., XML, HTML, JSON, ...) or no extension at all. You can fetch content of a file or content of a site. To do so, begin with blank '' as a JSON path of the root site page. this will reveal every node in object hierarchy. look at the content and if you find something you want to get all the times, use its JSON path in your query. if the target node value is another file, use a join query for JSON path to the target node with a blank '' JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for.
+You can use this wizard to discover content or call the WizardQueryService through provided methods to have your application access and use data in the most efficient way. The wizard will automatically parse the target URL into JSON no matter what the target content is. The target could have extension (XML, HTML, JSON, ...) externsion or no extension at all. You can fetch content of a remote file or a site. To do so, begin with blank `''` as a JSON path of the root site page. this will reveal every node in object hierarchy of the target. look at the content and if you find something you want to get all the times, use its JSON path in your fixed query. if the target node value is pointing to another file, use a join query for the JSON path that resulted the target node with a blank `''` JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for deeply nested in multitude of files.
 
 
 [Live Demo](https://wizard-query.stackblitz.io) | [Source code](https://github.com/msalehisedeh/wizard-query/tree/master/src/app) | [Comments/Requests](https://github.com/msalehisedeh/wizard-query/issues)
 
 ## How to use?
-If you do not want to directly use wizardQueryService, you can use the wizardQuery directive on any tag and receive the result using onQueryResult. The wizard service provides the following methods:
+If you do not want to directly use the WizardQueryService, you can use the WizardQueryDirective on any tag and receive the result using onQueryResult event. The wizard service provides the following methods:
 
 | Method     | Arguments                 |Description                                                           |
 |------------|---------------------------|----------------------------------------------------------------------|
-|select      |`path`, `from`, `deepXml`, `clause`|Use a single path or a list of JSON qualifying paths to access content.|
+|select      |`path`, `from`, `deepXml`, `clause`|Use a single path or a list of JSON qualifying paths to access content. the clause function is optional.|
 |arraySelect | `{path: '', in:'', deepXml: true}`, `clause` |  This method will invoke select(). But first, requests with similar paths will be merged into one call. deepXml attribute is optional. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. the clause function is optional.|
 |chainSelect | `{path: ['path1','path2'], in: 'url1', deepXml: true, handler: afunction, join: {path1: {path:'px', in:'urlx', handler: anotherfunction, join: {}}, path2: {path: 'py', in: 'urly'}}}` |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. deepXml attribute is optional. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. the handler function and join attributes are optional.|
 
@@ -20,13 +20,15 @@ If you do not want to directly use wizardQueryService, you can use the wizardQue
 If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path. For example: `select(['books.book.title', 'books.book.author'], '/example1.xml', false)` will result in `{'books.book.title': [], 'books.book.author': []}`. 
 
 
-if deepXml is set to true, the cdata-sections will also be parsed when parsing an xml content.
+if deepXml is set to true, the cdata-sections in xml files will also be parsed when parsing a content.
 
 
 If a clause/handler argument is supplied, it will be invoked to further assist in filtering the query result. for example if certain category of books are required, the clause/handler function can look for a book category attribute and return the query result if acceptable or undefined if result should be filtered out of the result. You can use both handler function and filtering mechanism to manage generated results. In a certain situations that it is not possible to set up a filtering logic, I recommend using the handler mechanism in conjunction with the filtering. Fore example, if you have multiple attributes in a structure and you need to pick one based on the device user is using, you can use a handler to decide the resulting value based on key in JSON path to trigger a code to decide on attribute value based on user device. Or format a value based on the key!!
 
 
-The wizard service allows you to set a default base path that prepends to all query URLs. By default it's value is blank. Note: If the subsequent URLs in a chain query point to different website URLs, do not set the base url value.
+The wizard service allows you to set a default base path `SERVICE_PATH` that prepends to all query URLs. By default it's value is blank. Note: If the subsequent URLs in a chain query point to different website URLs, do not set the base url value. If the subsequent URLs are absolute, do not pass value for 'in' attribute of join statement. the 'in' attribute of joint statement is prepended to the path of the subsequent file resulten in parent query.
+
+There is a `logEnabled` attribute that allows service to log additional information while running code. this attribute is set to false by default.
 
 
 ## Sample Use
@@ -211,6 +213,9 @@ this.select(
 );
 ```
 ## Releases
+
+### Version 1.1.4
+I am a perfectionist and trying to make this tool perfect. modified the wizard component to parse handler function typed in query editor without explicit 'return function'. This way the query handler function looks more natural.
 
 ### Version 1.1.3
 Modified the component to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. Also, if you type in a handler in the JSON query, it can be parsed and become functional as well. Also, fixed a type in service which was not taking the handler function in chainSelect.

@@ -989,7 +989,7 @@ var WizardQueryComponent = /** @class */ (function () {
         else if (typeof content === 'object') {
             Object.keys(content).map(function (key) {
                 if (key === 'handler') {
-                    content[key] = new Function(content[key])();
+                    content[key] = new Function('return function' + content[key])();
                 }
                 else {
                     _this.parseFunctions(content[key]);
