@@ -21,38 +21,7 @@
          * @return {?}
          */
             function () {
-                return "function reverse(a) {\n" +
-                    " if (a instanceof Array) {\n" +
-                    "  return a.reverse();\n" +
-                    " \n} else if (typeof a === 'string') {\n" +
-                    "  return a.split('').reverse().join('');\n" +
-                    " } else return a;\n" +
-                    "}\n" +
-                    "function sum(a,b) {\n" +
-                    " var total = 0;\n" +
-                    " if (a instanceof Array) { \n" +
-                    "  a.map(function(k) {total += sum(k, b);});\n" +
-                    " } else if (typeof a === 'object') {\n" +
-                    "   if (b.indexOf('.')>0){\n" +
-                    "     var t = a; b.split('.').map(function(k){total+=sum(t[k],b.substring(k.length+1))});" +
-                    "   } else if(a[b]) {\n" +
-                    "     var t = a[b];\n" +
-                    "     total += (typeof t === 'number') ? t : parseFloat(t);\n" +
-                    "   } \n" +
-                    " } \n" +
-                    " return total;\n" +
-                    "}\n" +
-                    "function count(a,b) {\n" +
-                    " var total = 0;\n" +
-                    " if (a instanceof Array) { \n" +
-                    "  a.map(function(k) {total += count(k, b);});\n" +
-                    " } else if (typeof a === 'object') {\n" +
-                    "  Object.keys(a).map(function(k){ total += count(a[k],b);});\n" +
-                    " } else if (typeof a === 'string') {\n" +
-                    "   total = a.split(b).length - 1;\n" +
-                    " } else if (a === b) {total++;}\n" +
-                    " return total;\n" +
-                    "}\n";
+                return "\n        function reverse(a) {\n            var result = a;\n            if (a instanceof Array) {\n                result = a.reverse();\n            } else if (typeof a === 'string') {\n                result = a.split('').reverse().join('');\n            }\n            return result;\n        }\n        function sum(a,b) {\n            var total = 0;\n            if (a instanceof Array) { \n                a.map(function(k) {\n                    total += sum(k, b);\n                });\n            } else if (typeof a === 'object') {\n                if (b.indexOf('.')>0) {\n                    var t = a;\n                    b.split('.').map(function(k){\n                        total+=sum( t[k], b.substring(k.length+1) );\n                    });\n                } else if(a[b]) {\n                    var t = a[b];\n                    total += (typeof t === 'number') ? t : parseFloat(t);\n                } \n            } else if (typeof a === 'number') {\n                total = a;\n            } \n            return total;\n        }\n        function count(a,b) {\n            var total = 0;\n            if (a instanceof Array) { \n                a.map(function(k) {\n                    total += count(k, b);\n                });\n            } else if (typeof a === 'object') {\n                Object.keys(a).map(function(k){\n                    total += count(a[k],b);\n                });\n            } else if (typeof a === 'string') {\n                total = a.split(b).length - 1;\n            } else if (a === b) {\n                total++;\n            }\n            return total;\n        }\n        function like(a, b) {\n            var result = undefined;\n            if (a instanceof Array) {\n                result = [];\n                a.map(function(k) {\n                    result.push(like(k, b));\n                });\n            } else if (typeof a === 'object') {\n                result = [];\n                Object.keys(a).map(function(k){\n                    result.push(like(a[k], b));\n                });\n            } else if (typeof a === 'string') {\n                if (a.indexOf(b) > -1) {\n                    result = a;\n                }\n            } else if (a === b) {\n                result = a;\n            }\n            return result;\n        }\n        function as(a, b) {\n            if (asList[b] === undefined) {\n                asList[b] = [a];\n            } else {\n                asList[b].push(a);\n            }\n            return a;\n        }\n        function is_in(a, b, list) {\n            var result = undefined;\n            if (b instanceof Array) { \n                result = [];\n                b.map(function(k) {\n                    result.push(is_in(k, list));\n                });\n            } else if (typeof b === 'object') {\n                result = [];\n                Object.keys(b).map(function(k) {\n                    result.push(is_in(b[k], list));\n                });\n            } else if (asList[list]){\n                asList[list].map(function(t) {\n                    if (typeof t ==='string') {\n                        if (t.indexOf(b) > -1) {\n                            result = a;\n                        }\n                    }\n                });\n            }\n            return result;\n        }\n        ";
             };
         /**
          * @param {?} value
@@ -110,6 +79,7 @@
         /**
          * @param {?} path
          * @param {?} data
+         * @param {?} as
          * @param {?} deepXml
          * @param {?=} clause
          * @return {?}
@@ -117,11 +87,12 @@
         WizardQueryService.prototype._valueOfJsonPath = /**
          * @param {?} path
          * @param {?} data
+         * @param {?} as
          * @param {?} deepXml
          * @param {?=} clause
          * @return {?}
          */
-            function (path, data, deepXml, clause) {
+            function (path, data, as, deepXml, clause) {
                 /** @type {?} */
                 var result;
                 /** @type {?} */
@@ -144,7 +115,7 @@
                                         var r_1 = true;
                                         subkey.validated.map(function (v) {
                                             /** @type {?} */
-                                            var z = v(x);
+                                            var z = v(x, as);
                                             if (typeof z === 'boolean') {
                                                 if (z == false) {
                                                     r_1 = false;
@@ -154,7 +125,7 @@
                                                 x = z;
                                             }
                                         });
-                                        if (r_1) {
+                                        if (r_1 && x) {
                                             t_1.push(x);
                                         }
                                         else {
@@ -168,7 +139,7 @@
                                         var r_2 = true;
                                         subkey.validated.map(function (v) {
                                             /** @type {?} */
-                                            var z = v(item);
+                                            var z = v(item, as);
                                             if (typeof z === 'boolean') {
                                                 if (z == false) {
                                                     r_2 = false;
@@ -178,7 +149,7 @@
                                                 item = z;
                                             }
                                         });
-                                        if (r_2) {
+                                        if (r_2 && item) {
                                             t_1.push(item);
                                         }
                                         else {
@@ -217,7 +188,7 @@
                                     var r_3 = true;
                                     subkey.validated.map(function (v) {
                                         /** @type {?} */
-                                        var z = v(item);
+                                        var z = v(item, as);
                                         if (typeof z === 'boolean') {
                                             if (z == false) {
                                                 r_3 = false;
@@ -227,7 +198,7 @@
                                             item = z;
                                         }
                                     });
-                                    if (r_3) {
+                                    if (r_3 && item) {
                                         t_2.push(item);
                                     }
                                     else {
@@ -244,7 +215,7 @@
                                 var r_4 = true;
                                 subkey.validated.map(function (v) {
                                     /** @type {?} */
-                                    var z = v(x);
+                                    var z = v(x, as);
                                     if (typeof z === 'boolean') {
                                         if (z == false) {
                                             r_4 = false;
@@ -254,7 +225,7 @@
                                         x = z;
                                     }
                                 });
-                                if (r_4) {
+                                if (r_4 && x) {
                                     result = x;
                                 }
                                 else {
@@ -380,11 +351,13 @@
                             result.push(item.key);
                         }
                     });
+                    result = result.join(',');
+                    result = result.indexOf('.') < 0 ? result.replace(/\,/g, '.') : result;
                 }
                 else {
-                    result.push(key.key);
+                    result = key.key;
                 }
-                return result.join(',');
+                return result;
             };
         /**
          * @param {?} value
@@ -426,7 +399,14 @@
                     }
                     value = this._normalize(value, action.deepXml);
                     if (op[key2]) {
-                        op[key2].push(value[key2] ? value[key2] : value);
+                        if (typeof value === 'object') {
+                            if (JSON.stringify(value) !== JSON.stringify(op[key2][0])) {
+                                op[key2].push(value[key2] ? value[key2] : value);
+                            }
+                        }
+                        else {
+                            op[key2].push(value[key2] ? value[key2] : value);
+                        }
                     }
                     else {
                         if ((op instanceof Array) === false) {
@@ -434,7 +414,14 @@
                             operation.result[path].push(value[key2] ? value[key2] : value);
                         }
                         else {
-                            op.push(value[key2] ? value[key2] : value);
+                            if (typeof value === 'object') {
+                                if (JSON.stringify(value) !== JSON.stringify(op[0])) {
+                                    op.push(value[key2] ? value[key2] : value);
+                                }
+                            }
+                            else {
+                                op.push(value[key2] ? value[key2] : value);
+                            }
                         }
                     }
                 }
@@ -487,16 +474,32 @@
             };
         /**
          * @param {?} promise
+         * @param {?} as
          * @param {?} result
          * @return {?}
          */
         WizardQueryService.prototype._triggerResult = /**
          * @param {?} promise
+         * @param {?} as
          * @param {?} result
          * @return {?}
          */
-            function (promise, result) {
-                promise.next(this._pack(result));
+            function (promise, as, result) {
+                /** @type {?} */
+                var x = this._pack(result);
+                /** @type {?} */
+                var saveAs;
+                if (as) {
+                    if (typeof as === 'string') {
+                        saveAs = {};
+                        saveAs[as] = x;
+                    }
+                    else if (typeof as === 'object') {
+                        saveAs = as;
+                    }
+                }
+                promise.next(x);
+                return saveAs;
             };
         /**
          * @param {?} promise
@@ -537,7 +540,7 @@
                                 source.map(function (item) {
                                     _this._subquery(promise, item, operation, {
                                         path: opkeyi_1.path,
-                                        in: opkeyi_1.in + item,
+                                        in: opkeyi_1.in == undefined ? action.in : (opkeyi_1.in + item),
                                         deepXml: opkeyi_1.deepXml,
                                         join: opkeyi_1.join,
                                         handler: opkeyi_1.handler,
@@ -548,7 +551,7 @@
                             else {
                                 _this._subquery(promise, source, operation, {
                                     path: action.join[opkeyi_1.path],
-                                    in: opkeyi_1.in + source,
+                                    in: opkeyi_1.in == undefined ? action.in : (opkeyi_1.in + source),
                                     deepXml: action.deepXml,
                                     join: opkeyi_1.join,
                                     handler: opkeyi_1.handler,
@@ -559,12 +562,12 @@
                         else if (_this._addToResult(source, action.path, operation, action)) {
                             action.queryItems--;
                             if (action.queryItems === 0) {
-                                _this._triggerResult(promise, operation.result);
+                                operation.as = _this._triggerResult(promise, operation.as, operation.result);
                             }
                         }
                         else {
                             action.queryItems--;
-                            _this._triggerResult(promise, operation.result);
+                            operation.as = _this._triggerResult(promise, operation.as, operation.result);
                         }
                     }
                 }, function (error) {
@@ -572,7 +575,7 @@
                         console.log(error);
                     }
                     action.queryItems--;
-                    _this._triggerResult(promise, operation.result);
+                    operation.as = _this._triggerResult(promise, operation.as, operation.result);
                 });
             };
         /**
@@ -594,7 +597,7 @@
                 if (!action.handler) {
                     action.handler = function (node, path, value) { return value; };
                 }
-                this.select(action.path, action.in, action.deepXml, action.handler).subscribe(function (data) {
+                this._select(action.path, action.in, action.deepXml, operation.as, action.handler).subscribe(function (data) {
                     if (data) {
                         if (cacheNamed) {
                             // result of n-th level call to be placed on previous level cache reference.
@@ -609,13 +612,19 @@
                                     data.map(function (content) {
                                         /** @type {?} */
                                         var path = content['#text'] ? content['#text'] : content;
+                                        /** @type {?} */
+                                        var size = (operationalKey_1.path instanceof Array) ? operationalKey_1.path.length : 1;
+                                        if (operationalKey_1.in == undefined) {
+                                            operation.cachedFiles[path] = _this._select(operationalKey_1.path, action.in, operationalKey_1.deepXml, operation.as, operationalKey_1.handler);
+                                            size--;
+                                        }
                                         _this._subquery(promise, path, operation, {
                                             path: operationalKey_1.path,
-                                            in: operationalKey_1.in + content,
+                                            in: operationalKey_1.in == undefined ? action.in : (operationalKey_1.in + content),
                                             deepXml: operationalKey_1.deepXml,
                                             join: operationalKey_1.join,
                                             handler: operationalKey_1.handler,
-                                            queryItems: (operationalKey_1.path instanceof Array) ? operationalKey_1.path.length : 1
+                                            queryItems: size
                                         });
                                     });
                                 }
@@ -625,7 +634,7 @@
                                     if (action.queryItems === 0) {
                                         /** @type {?} */
                                         var result = operation.result ? operation.result : {};
-                                        _this._triggerResult(promise, Object.keys(operation.result).length ? operation.result : data);
+                                        operation.as = _this._triggerResult(promise, operation.as, Object.keys(operation.result).length ? operation.result : data);
                                     }
                                 }
                             }
@@ -636,12 +645,18 @@
                                     /** @type {?} */
                                     var operationalKey = action.join ? action.join[key] : undefined;
                                     if (content && content.length && operationalKey) {
+                                        /** @type {?} */
+                                        var size = (operationalKey.path instanceof Array) ? operationalKey.path.length : 1;
+                                        if (operationalKey.in == undefined) {
+                                            operation.cachedFiles[content] = _this._select(operationalKey.path, action.in, operationalKey.deepXml, operation.as, operationalKey.handler);
+                                            size--;
+                                        }
                                         _this._subquery(promise, content, operation, {
                                             path: operationalKey.path,
-                                            in: operationalKey.in + content,
+                                            in: operationalKey.in == undefined ? action.in : (operationalKey.in + content),
                                             deepXml: operationalKey.deepXml,
                                             handler: operationalKey.handler,
-                                            queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
+                                            queryItems: size
                                         });
                                     }
                                     else {
@@ -658,7 +673,7 @@
                                             }
                                         }
                                         if (action.queryItems === 0) {
-                                            _this._triggerResult(promise, Object.keys(operation.result).length ? operation.result : data);
+                                            operation.as = _this._triggerResult(promise, operation.as, Object.keys(operation.result).length ? operation.result : data);
                                         }
                                     }
                                 });
@@ -670,7 +685,7 @@
                                         operation.result = data;
                                     }
                                 }
-                                _this._triggerResult(promise, operation.result);
+                                operation.as = _this._triggerResult(promise, operation.as, operation.result);
                             }
                         }
                     }
@@ -681,7 +696,7 @@
                     });
                     action.queryItems--;
                     if (action.queryItems === 0) {
-                        _this._triggerResult(promise, operation.result);
+                        operation.as = _this._triggerResult(promise, operation.as, operation.result);
                     }
                 });
             };
@@ -705,7 +720,7 @@
                     if (b < 0) {
                         result.push({
                             key: item,
-                            validated: [function (data) { return true; }]
+                            validated: [function (data, as) { return true; }]
                         });
                     }
                     else {
@@ -716,7 +731,7 @@
                         /** @type {?} */
                         var object_1 = {
                             key: item.substring(0, b),
-                            validated: [function (data) { return true; }]
+                            validated: [function (data, as) { return true; }]
                         };
                         vList.map(function (filter) {
                             filter = filter.replace(/\`/g, '.');
@@ -747,7 +762,7 @@
                                 /** @type {?} */
                                 var t = filter.indexOf('&&') > 0 || filter.indexOf('||') > 0;
                                 /** @type {?} */
-                                var f = 'return function (data) { \n';
+                                var f = 'return function (data, asList) { \n';
                                 f += _this._globalFunctions();
                                 f += 'var x = false;\n try{\n x = ';
                                 f += (t ? '(' + filter + ')' : filter) + '; \n}catch(e){}\n return x;\n}';
@@ -814,6 +829,63 @@
                     result = this._makeArguments(x);
                 }
                 return result;
+            };
+        /**
+         * @param {?} path
+         * @param {?} from
+         * @param {?} deepXml
+         * @param {?} as
+         * @param {?=} clause
+         * @return {?}
+         */
+        WizardQueryService.prototype._select = /**
+         * @param {?} path
+         * @param {?} from
+         * @param {?} deepXml
+         * @param {?} as
+         * @param {?=} clause
+         * @return {?}
+         */
+            function (path, from, deepXml, as, clause) {
+                var _this = this;
+                /** @type {?} */
+                var dataStore = new rxjs.BehaviorSubject(null);
+                this._get(from).subscribe(function (data) {
+                    /** @type {?} */
+                    var result;
+                    /** @type {?} */
+                    var jpath = _this._prepareJsonPath(path);
+                    if (!clause) {
+                        clause = function (node, path, value) { return value; };
+                    }
+                    if (path instanceof Array) {
+                        result = {};
+                        jpath.map(function (pathItem) {
+                            /** @type {?} */
+                            var y = _this._valueOfJsonPath(pathItem, data, as, deepXml, clause);
+                            if (y) {
+                                /** @type {?} */
+                                var key = _this._stringValueOfKey(pathItem);
+                                result[key] = y;
+                            }
+                        });
+                        if (Object.keys(result).length === 0) {
+                            result = undefined;
+                        }
+                    }
+                    else if (typeof path === 'string') {
+                        result = _this._valueOfJsonPath(jpath, data, as, deepXml, clause);
+                    }
+                    if (result) {
+                        dataStore.next(result);
+                    }
+                    else {
+                        dataStore.error('Result not found for ' + path);
+                    }
+                }, function (error) {
+                    dataStore.error(error);
+                });
+                return dataStore;
             };
         /**
          * @param {?} xml
@@ -904,9 +976,10 @@
                 /** @type {?} */
                 var size = (chainQuery.path instanceof Array) ? chainQuery.path.length : 1;
                 /** @type {?} */
-                var operation = { cachedFiles: {}, result: {} };
+                var operation = { cachedFiles: {}, as: {}, result: {} };
                 /** @type {?} */
                 var dataStore = new rxjs.BehaviorSubject(null);
+                operation.cachedFiles[chainQuery.path] = dataStore;
                 this._queryIteration(dataStore, operation, {
                     path: chainQuery.path,
                     in: chainQuery.in,
@@ -946,7 +1019,7 @@
                 /** @type {?} */
                 var dataStore = new rxjs.BehaviorSubject(null);
                 Object.keys(groupedList).map(function (url) {
-                    _this.select(groupedList[url].path, url, groupedList[url].deepXml, clause).subscribe(function (data) {
+                    _this._select(groupedList[url].path, url, groupedList[url].deepXml, undefined, clause).subscribe(function (data) {
                         if (data) {
                             dataStore.next(data);
                         }
@@ -980,45 +1053,7 @@
          * @return {?}
          */
             function (path, from, deepXml, clause) {
-                var _this = this;
-                /** @type {?} */
-                var dataStore = new rxjs.BehaviorSubject(null);
-                this._get(from).subscribe(function (data) {
-                    /** @type {?} */
-                    var result;
-                    /** @type {?} */
-                    var jpath = _this._prepareJsonPath(path);
-                    if (!clause) {
-                        clause = function (node, path, value) { return value; };
-                    }
-                    if (path instanceof Array) {
-                        result = {};
-                        jpath.map(function (pathItem) {
-                            /** @type {?} */
-                            var y = _this._valueOfJsonPath(pathItem, data, deepXml, clause);
-                            if (y) {
-                                /** @type {?} */
-                                var key = _this._stringValueOfKey(pathItem);
-                                result[key] = y;
-                            }
-                        });
-                        if (Object.keys(result).length === 0) {
-                            result = undefined;
-                        }
-                    }
-                    else if (typeof path === 'string') {
-                        result = _this._valueOfJsonPath(jpath, data, deepXml, clause);
-                    }
-                    if (result) {
-                        dataStore.next(result);
-                    }
-                    else {
-                        dataStore.error('Result not found for ' + path);
-                    }
-                }, function (error) {
-                    dataStore.error(error);
-                });
-                return dataStore;
+                return this._select(path, from, deepXml, undefined, clause);
             };
         WizardQueryService.decorators = [
             { type: core.Injectable }

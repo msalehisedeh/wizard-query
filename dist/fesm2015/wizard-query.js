@@ -22,38 +22,107 @@ class WizardQueryService {
      * @return {?}
      */
     _globalFunctions() {
-        return "function reverse(a) {\n" +
-            " if (a instanceof Array) {\n" +
-            "  return a.reverse();\n" +
-            " \n} else if (typeof a === 'string') {\n" +
-            "  return a.split('').reverse().join('');\n" +
-            " } else return a;\n" +
-            "}\n" +
-            "function sum(a,b) {\n" +
-            " var total = 0;\n" +
-            " if (a instanceof Array) { \n" +
-            "  a.map(function(k) {total += sum(k, b);});\n" +
-            " } else if (typeof a === 'object') {\n" +
-            "   if (b.indexOf('.')>0){\n" +
-            "     var t = a; b.split('.').map(function(k){total+=sum(t[k],b.substring(k.length+1))});" +
-            "   } else if(a[b]) {\n" +
-            "     var t = a[b];\n" +
-            "     total += (typeof t === 'number') ? t : parseFloat(t);\n" +
-            "   } \n" +
-            " } \n" +
-            " return total;\n" +
-            "}\n" +
-            "function count(a,b) {\n" +
-            " var total = 0;\n" +
-            " if (a instanceof Array) { \n" +
-            "  a.map(function(k) {total += count(k, b);});\n" +
-            " } else if (typeof a === 'object') {\n" +
-            "  Object.keys(a).map(function(k){ total += count(a[k],b);});\n" +
-            " } else if (typeof a === 'string') {\n" +
-            "   total = a.split(b).length - 1;\n" +
-            " } else if (a === b) {total++;}\n" +
-            " return total;\n" +
-            "}\n";
+        return `
+        function reverse(a) {
+            var result = a;
+            if (a instanceof Array) {
+                result = a.reverse();
+            } else if (typeof a === 'string') {
+                result = a.split('').reverse().join('');
+            }
+            return result;
+        }
+        function sum(a,b) {
+            var total = 0;
+            if (a instanceof Array) { 
+                a.map(function(k) {
+                    total += sum(k, b);
+                });
+            } else if (typeof a === 'object') {
+                if (b.indexOf('.')>0) {
+                    var t = a;
+                    b.split('.').map(function(k){
+                        total+=sum( t[k], b.substring(k.length+1) );
+                    });
+                } else if(a[b]) {
+                    var t = a[b];
+                    total += (typeof t === 'number') ? t : parseFloat(t);
+                } 
+            } else if (typeof a === 'number') {
+                total = a;
+            } 
+            return total;
+        }
+        function count(a,b) {
+            var total = 0;
+            if (a instanceof Array) { 
+                a.map(function(k) {
+                    total += count(k, b);
+                });
+            } else if (typeof a === 'object') {
+                Object.keys(a).map(function(k){
+                    total += count(a[k],b);
+                });
+            } else if (typeof a === 'string') {
+                total = a.split(b).length - 1;
+            } else if (a === b) {
+                total++;
+            }
+            return total;
+        }
+        function like(a, b) {
+            var result = undefined;
+            if (a instanceof Array) {
+                result = [];
+                a.map(function(k) {
+                    result.push(like(k, b));
+                });
+            } else if (typeof a === 'object') {
+                result = [];
+                Object.keys(a).map(function(k){
+                    result.push(like(a[k], b));
+                });
+            } else if (typeof a === 'string') {
+                if (a.indexOf(b) > -1) {
+                    result = a;
+                }
+            } else if (a === b) {
+                result = a;
+            }
+            return result;
+        }
+        function as(a, b) {
+            if (asList[b] === undefined) {
+                asList[b] = [a];
+            } else {
+                asList[b].push(a);
+            }
+            return a;
+        }
+        function is_in(a, b, list) {
+            var result = undefined;
+            if (b instanceof Array) { 
+                result = [];
+                b.map(function(k) {
+                    result.push(is_in(k, list));
+                });
+            } else if (typeof b === 'object') {
+                result = [];
+                Object.keys(b).map(function(k) {
+                    result.push(is_in(b[k], list));
+                });
+            } else if (asList[list]){
+                asList[list].map(function(t) {
+                    if (typeof t ==='string') {
+                        if (t.indexOf(b) > -1) {
+                            result = a;
+                        }
+                    }
+                });
+            }
+            return result;
+        }
+        `;
     }
     /**
      * @param {?} value
@@ -105,11 +174,12 @@ class WizardQueryService {
     /**
      * @param {?} path
      * @param {?} data
+     * @param {?} as
      * @param {?} deepXml
      * @param {?=} clause
      * @return {?}
      */
-    _valueOfJsonPath(path, data, deepXml, clause) {
+    _valueOfJsonPath(path, data, as, deepXml, clause) {
         /** @type {?} */
         let result;
         /** @type {?} */
@@ -132,7 +202,7 @@ class WizardQueryService {
                                 let r = true;
                                 subkey.validated.map(v => {
                                     /** @type {?} */
-                                    const z = v(x);
+                                    const z = v(x, as);
                                     if (typeof z === 'boolean') {
                                         if (z == false) {
                                             r = false;
@@ -142,7 +212,7 @@ class WizardQueryService {
                                         x = z;
                                     }
                                 });
-                                if (r) {
+                                if (r && x) {
                                     t.push(x);
                                 }
                                 else {
@@ -156,7 +226,7 @@ class WizardQueryService {
                                 let r = true;
                                 subkey.validated.map(v => {
                                     /** @type {?} */
-                                    const z = v(item);
+                                    const z = v(item, as);
                                     if (typeof z === 'boolean') {
                                         if (z == false) {
                                             r = false;
@@ -166,7 +236,7 @@ class WizardQueryService {
                                         item = z;
                                     }
                                 });
-                                if (r) {
+                                if (r && item) {
                                     t.push(item);
                                 }
                                 else {
@@ -205,7 +275,7 @@ class WizardQueryService {
                             let r = true;
                             subkey.validated.map(v => {
                                 /** @type {?} */
-                                const z = v(item);
+                                const z = v(item, as);
                                 if (typeof z === 'boolean') {
                                     if (z == false) {
                                         r = false;
@@ -215,7 +285,7 @@ class WizardQueryService {
                                     item = z;
                                 }
                             });
-                            if (r) {
+                            if (r && item) {
                                 t.push(item);
                             }
                             else {
@@ -232,7 +302,7 @@ class WizardQueryService {
                         let r = true;
                         subkey.validated.map(v => {
                             /** @type {?} */
-                            const z = v(x);
+                            const z = v(x, as);
                             if (typeof z === 'boolean') {
                                 if (z == false) {
                                     r = false;
@@ -242,7 +312,7 @@ class WizardQueryService {
                                 x = z;
                             }
                         });
-                        if (r) {
+                        if (r && x) {
                             result = x;
                         }
                         else {
@@ -333,7 +403,7 @@ class WizardQueryService {
      */
     _stringValueOfKey(key) {
         /** @type {?} */
-        const result = [];
+        let result = [];
         if (key instanceof Array) {
             key.map((item) => {
                 if (item instanceof Array) {
@@ -359,11 +429,13 @@ class WizardQueryService {
                     result.push(item.key);
                 }
             });
+            result = result.join(',');
+            result = result.indexOf('.') < 0 ? result.replace(/\,/g, '.') : result;
         }
         else {
-            result.push(key.key);
+            result = key.key;
         }
-        return result.join(',');
+        return result;
     }
     /**
      * @param {?} value
@@ -398,7 +470,14 @@ class WizardQueryService {
             }
             value = this._normalize(value, action.deepXml);
             if (op[key2]) {
-                op[key2].push(value[key2] ? value[key2] : value);
+                if (typeof value === 'object') {
+                    if (JSON.stringify(value) !== JSON.stringify(op[key2][0])) {
+                        op[key2].push(value[key2] ? value[key2] : value);
+                    }
+                }
+                else {
+                    op[key2].push(value[key2] ? value[key2] : value);
+                }
             }
             else {
                 if ((op instanceof Array) === false) {
@@ -406,7 +485,14 @@ class WizardQueryService {
                     operation.result[path].push(value[key2] ? value[key2] : value);
                 }
                 else {
-                    op.push(value[key2] ? value[key2] : value);
+                    if (typeof value === 'object') {
+                        if (JSON.stringify(value) !== JSON.stringify(op[0])) {
+                            op.push(value[key2] ? value[key2] : value);
+                        }
+                    }
+                    else {
+                        op.push(value[key2] ? value[key2] : value);
+                    }
                 }
             }
         }
@@ -454,11 +540,26 @@ class WizardQueryService {
     }
     /**
      * @param {?} promise
+     * @param {?} as
      * @param {?} result
      * @return {?}
      */
-    _triggerResult(promise, result) {
-        promise.next(this._pack(result));
+    _triggerResult(promise, as, result) {
+        /** @type {?} */
+        const x = this._pack(result);
+        /** @type {?} */
+        let saveAs;
+        if (as) {
+            if (typeof as === 'string') {
+                saveAs = {};
+                saveAs[as] = x;
+            }
+            else if (typeof as === 'object') {
+                saveAs = as;
+            }
+        }
+        promise.next(x);
+        return saveAs;
     }
     /**
      * @param {?} promise
@@ -491,7 +592,7 @@ class WizardQueryService {
                         source.map((item) => {
                             this._subquery(promise, item, operation, {
                                 path: opkeyi.path,
-                                in: opkeyi.in + item,
+                                in: opkeyi.in == undefined ? action.in : (opkeyi.in + item),
                                 deepXml: opkeyi.deepXml,
                                 join: opkeyi.join,
                                 handler: opkeyi.handler,
@@ -502,7 +603,7 @@ class WizardQueryService {
                     else {
                         this._subquery(promise, source, operation, {
                             path: action.join[opkeyi.path],
-                            in: opkeyi.in + source,
+                            in: opkeyi.in == undefined ? action.in : (opkeyi.in + source),
                             deepXml: action.deepXml,
                             join: opkeyi.join,
                             handler: opkeyi.handler,
@@ -513,12 +614,12 @@ class WizardQueryService {
                 else if (this._addToResult(source, action.path, operation, action)) {
                     action.queryItems--;
                     if (action.queryItems === 0) {
-                        this._triggerResult(promise, operation.result);
+                        operation.as = this._triggerResult(promise, operation.as, operation.result);
                     }
                 }
                 else {
                     action.queryItems--;
-                    this._triggerResult(promise, operation.result);
+                    operation.as = this._triggerResult(promise, operation.as, operation.result);
                 }
             }
         }, (error) => {
@@ -526,7 +627,7 @@ class WizardQueryService {
                 console.log(error);
             }
             action.queryItems--;
-            this._triggerResult(promise, operation.result);
+            operation.as = this._triggerResult(promise, operation.as, operation.result);
         });
     }
     /**
@@ -540,7 +641,7 @@ class WizardQueryService {
         if (!action.handler) {
             action.handler = (node, path, value) => value;
         }
-        this.select(action.path, action.in, action.deepXml, action.handler).subscribe((data) => {
+        this._select(action.path, action.in, action.deepXml, operation.as, action.handler).subscribe((data) => {
             if (data) {
                 if (cacheNamed) {
                     // result of n-th level call to be placed on previous level cache reference.
@@ -555,13 +656,19 @@ class WizardQueryService {
                             data.map((content) => {
                                 /** @type {?} */
                                 const path = content['#text'] ? content['#text'] : content;
+                                /** @type {?} */
+                                let size = (operationalKey.path instanceof Array) ? operationalKey.path.length : 1;
+                                if (operationalKey.in == undefined) {
+                                    operation.cachedFiles[path] = this._select(operationalKey.path, action.in, operationalKey.deepXml, operation.as, operationalKey.handler);
+                                    size--;
+                                }
                                 this._subquery(promise, path, operation, {
                                     path: operationalKey.path,
-                                    in: operationalKey.in + content,
+                                    in: operationalKey.in == undefined ? action.in : (operationalKey.in + content),
                                     deepXml: operationalKey.deepXml,
                                     join: operationalKey.join,
                                     handler: operationalKey.handler,
-                                    queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
+                                    queryItems: size
                                 });
                             });
                         }
@@ -571,7 +678,7 @@ class WizardQueryService {
                             if (action.queryItems === 0) {
                                 /** @type {?} */
                                 const result = operation.result ? operation.result : {};
-                                this._triggerResult(promise, Object.keys(operation.result).length ? operation.result : data);
+                                operation.as = this._triggerResult(promise, operation.as, Object.keys(operation.result).length ? operation.result : data);
                             }
                         }
                     }
@@ -582,12 +689,18 @@ class WizardQueryService {
                             /** @type {?} */
                             const operationalKey = action.join ? action.join[key] : undefined;
                             if (content && content.length && operationalKey) {
+                                /** @type {?} */
+                                let size = (operationalKey.path instanceof Array) ? operationalKey.path.length : 1;
+                                if (operationalKey.in == undefined) {
+                                    operation.cachedFiles[content] = this._select(operationalKey.path, action.in, operationalKey.deepXml, operation.as, operationalKey.handler);
+                                    size--;
+                                }
                                 this._subquery(promise, content, operation, {
                                     path: operationalKey.path,
-                                    in: operationalKey.in + content,
+                                    in: operationalKey.in == undefined ? action.in : (operationalKey.in + content),
                                     deepXml: operationalKey.deepXml,
                                     handler: operationalKey.handler,
-                                    queryItems: (operationalKey.path instanceof Array) ? operationalKey.path.length : 1
+                                    queryItems: size
                                 });
                             }
                             else {
@@ -604,7 +717,7 @@ class WizardQueryService {
                                     }
                                 }
                                 if (action.queryItems === 0) {
-                                    this._triggerResult(promise, Object.keys(operation.result).length ? operation.result : data);
+                                    operation.as = this._triggerResult(promise, operation.as, Object.keys(operation.result).length ? operation.result : data);
                                 }
                             }
                         });
@@ -616,7 +729,7 @@ class WizardQueryService {
                                 operation.result = data;
                             }
                         }
-                        this._triggerResult(promise, operation.result);
+                        operation.as = this._triggerResult(promise, operation.as, operation.result);
                     }
                 }
             }
@@ -627,7 +740,7 @@ class WizardQueryService {
             });
             action.queryItems--;
             if (action.queryItems === 0) {
-                this._triggerResult(promise, operation.result);
+                operation.as = this._triggerResult(promise, operation.as, operation.result);
             }
         });
     }
@@ -646,7 +759,7 @@ class WizardQueryService {
             if (b < 0) {
                 result.push({
                     key: item,
-                    validated: [(data) => true]
+                    validated: [(data, as) => true]
                 });
             }
             else {
@@ -657,7 +770,7 @@ class WizardQueryService {
                 /** @type {?} */
                 const object = {
                     key: item.substring(0, b),
-                    validated: [(data) => true]
+                    validated: [(data, as) => true]
                 };
                 vList.map((filter) => {
                     filter = filter.replace(/\`/g, '.');
@@ -688,7 +801,7 @@ class WizardQueryService {
                         /** @type {?} */
                         const t = filter.indexOf('&&') > 0 || filter.indexOf('||') > 0;
                         /** @type {?} */
-                        let f = 'return function (data) { \n';
+                        let f = 'return function (data, asList) { \n';
                         f += this._globalFunctions();
                         f += 'var x = false;\n try{\n x = ';
                         f += (t ? '(' + filter + ')' : filter) + '; \n}catch(e){}\n return x;\n}';
@@ -746,6 +859,54 @@ class WizardQueryService {
             result = this._makeArguments(x);
         }
         return result;
+    }
+    /**
+     * @param {?} path
+     * @param {?} from
+     * @param {?} deepXml
+     * @param {?} as
+     * @param {?=} clause
+     * @return {?}
+     */
+    _select(path, from, deepXml, as, clause) {
+        /** @type {?} */
+        const dataStore = new BehaviorSubject(null);
+        this._get(from).subscribe((data) => {
+            /** @type {?} */
+            let result;
+            /** @type {?} */
+            const jpath = this._prepareJsonPath(path);
+            if (!clause) {
+                clause = (node, path, value) => value;
+            }
+            if (path instanceof Array) {
+                result = {};
+                jpath.map((pathItem) => {
+                    /** @type {?} */
+                    const y = this._valueOfJsonPath(pathItem, data, as, deepXml, clause);
+                    if (y) {
+                        /** @type {?} */
+                        let key = this._stringValueOfKey(pathItem);
+                        result[key] = y;
+                    }
+                });
+                if (Object.keys(result).length === 0) {
+                    result = undefined;
+                }
+            }
+            else if (typeof path === 'string') {
+                result = this._valueOfJsonPath(jpath, data, as, deepXml, clause);
+            }
+            if (result) {
+                dataStore.next(result);
+            }
+            else {
+                dataStore.error('Result not found for ' + path);
+            }
+        }, (error) => {
+            dataStore.error(error);
+        });
+        return dataStore;
     }
     /**
      * @param {?} xml
@@ -813,9 +974,10 @@ class WizardQueryService {
         /** @type {?} */
         const size = (chainQuery.path instanceof Array) ? chainQuery.path.length : 1;
         /** @type {?} */
-        const operation = { cachedFiles: {}, result: {} };
+        const operation = { cachedFiles: {}, as: {}, result: {} };
         /** @type {?} */
         const dataStore = new BehaviorSubject(null);
+        operation.cachedFiles[chainQuery.path] = dataStore;
         this._queryIteration(dataStore, operation, {
             path: chainQuery.path,
             in: chainQuery.in,
@@ -843,7 +1005,7 @@ class WizardQueryService {
         /** @type {?} */
         const dataStore = new BehaviorSubject(null);
         Object.keys(groupedList).map((url) => {
-            this.select(groupedList[url].path, url, groupedList[url].deepXml, clause).subscribe((data) => {
+            this._select(groupedList[url].path, url, groupedList[url].deepXml, undefined, clause).subscribe((data) => {
                 if (data) {
                     dataStore.next(data);
                 }
@@ -861,44 +1023,7 @@ class WizardQueryService {
      * @return {?}
      */
     select(path, from, deepXml, clause) {
-        /** @type {?} */
-        const dataStore = new BehaviorSubject(null);
-        this._get(from).subscribe((data) => {
-            /** @type {?} */
-            let result;
-            /** @type {?} */
-            const jpath = this._prepareJsonPath(path);
-            if (!clause) {
-                clause = (node, path, value) => value;
-            }
-            if (path instanceof Array) {
-                result = {};
-                jpath.map((pathItem) => {
-                    /** @type {?} */
-                    const y = this._valueOfJsonPath(pathItem, data, deepXml, clause);
-                    if (y) {
-                        /** @type {?} */
-                        let key = this._stringValueOfKey(pathItem);
-                        result[key] = y;
-                    }
-                });
-                if (Object.keys(result).length === 0) {
-                    result = undefined;
-                }
-            }
-            else if (typeof path === 'string') {
-                result = this._valueOfJsonPath(jpath, data, deepXml, clause);
-            }
-            if (result) {
-                dataStore.next(result);
-            }
-            else {
-                dataStore.error('Result not found for ' + path);
-            }
-        }, (error) => {
-            dataStore.error(error);
-        });
-        return dataStore;
+        return this._select(path, from, deepXml, undefined, clause);
     }
 }
 WizardQueryService.decorators = [

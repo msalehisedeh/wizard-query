@@ -93,6 +93,24 @@ export class AppComponent {
       }
     },
     {
+      label:'Document in .xml  using is_in function',
+      query: {
+        "path": [
+          "books.book[@.category=='WEB'].author[as(@,'authors')]",
+          "books.book.year"
+        ],
+        "in": "http://localhost:4200/assets/mixed",
+        "join": {
+          "books.book.author": {
+            "path": [
+              "writers.writer[is_in(@,@.name.fname,'authors')].name.fname",
+              "writers.writer[is_in(@,@.name.fname,'authors')].publications"
+            ]
+          }
+        }
+      }
+    },
+    {
       label:'Document 2 .xml Extention Chained content',
       query: {
         path: [

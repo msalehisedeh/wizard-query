@@ -12,15 +12,65 @@ You can use this wizard to discover content or call the WizardQueryService throu
 ## How to use?
 If you do not want to directly use the WizardQueryService, you can use the WizardQueryDirective on any tag and receive the result using onQueryResult event. The wizard service provides the following methods:
 
-| Method     | Arguments                 |Description                                                           |
-|------------|---------------------------|----------------------------------------------------------------------|
-|select      |`path`, `from`, `deepXml`, `clause`|Use a single path or a list of JSON qualifying paths to access content. The clause function is optional.|
-|arraySelect | `{path: '', in:'', deepXml: true}`, `clause` |  This method will invoke select(). But first, requests with similar paths will be merged into one call. deepXml attribute is optional. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. The clause function is optional.|
-|chainSelect | `{path: ['path1','path2'], in: 'url1', deepXml: true, handler: afunction, join: {path1: {path:'px', in:'urlx', handler: anotherfunction, join: {}}, path2: {path: 'py', in: 'urly'}}}` |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. `deepXml` attribute is optional. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. The handler function and join attributes are optional.|
+| Method     |Description                                                           |
+|------------|----------------------------------------------------------------------|
+|select      |Use a single path or a list of JSON qualifying paths to access content. |
+|arraySelect |This method will invoke select(). But first, requests with similar paths will be merged into one call. This method is useful when paths are dynamically given and it is not clear in advance if there are requests with similar paths. |
+|chainSelect |Use a chained set of paths in a JSON object to access data deep in a chain of files. When result of a single query becomes available, the join attribute of query will be examined to see if a key for the JSON path is available. If so, then the URL for the result appends to the 'in' value of the join query. This method is useful when result of a query is a JSON or an XML file and additional query is needed further down in the proceeding files. The handler function and join attributes are optional.|
 
+### Methods and arguments
+```javascript
+slect(
+	path,    // JSON-path (single string or array of paths)
+	from,    // URL of the data source
+	deepXml, // true/false - if xml content is fetched should the c-data parsed as well?
+	clause) // The clause function is optional.
 
-If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path. For example: `select(['books.book.title', 'books.book.author'], '/example1.xml', false)` will result in `{'books.book.title': [], 'books.book.author': []}`. 
+arraySelect(
+	[	// array of
+		{
+			path:    // JSON-path (single string or array of paths)
+			in:      // URL of the data source
+			deepXml: // true/false - if xml content is fetched should the c-data parsed as well?
+		}
+	],
+	clause: The clause function is optional.
+)
 
+// if the select path is a single string, then the join key for it
+// should be exactly the same. otherwise, if the select path is an
+// array, then the join key for each item in the array should be
+// pure json-path without filtering brackets[].
+chainSelect(
+	{
+		path:     // JSON-path (single string or array of paths)
+		in:      // URL of the data source
+		deepXml: // true/false - if xml content is fetched should the c-data parsed as well?
+		handler: // optional clause function handling data
+		join: {  // Optional join with content of same or another file
+			key: // a search key in parent query.
+			{
+				path:    // JSON-path (single string or array of paths)
+				in:      // relative URL of join data - if undefined, path will be searched in parent source,
+				handler: // optional clause function handling data
+				deepXml: // true/false - if xml content is fetched should the c-data parsed as well?
+				join: {
+					// MOREOPTIONAL NESTED QUERY.
+				}
+			}
+		}
+	}
+)
+```
+
+If multiple paths are supplied in a query, the query result will be a JSON object where each attribute will be a given query path and its value will be query result for that path. For example: 
+```javascript
+select(['books.book.title', 'books.book.author'], '/example1.xml', false)
+
+will result in 
+
+{'books.book.title': [], 'books.book.author': []}
+```
 
 if `deepXml` is set to true, the cdata-sections in xml files will also be parsed when parsing a content.
 
@@ -34,12 +84,14 @@ There is a `logEnabled` attribute that allows service to log additional informat
 
 ## global functions
 You can use the following functions in query filtering mechanism.
-| Method        |args      |Description                                                              |
-|---------------|----------|-------------------------------------------------------------------------|
-| reverse(@)    |item      |Will return reverse order of item                                        |
-| count(@,'is') |item,value|Will count the number of 'is' in item                                    |
-| sum(@,'price')|item,key  |Will retuen total 'price' of item. if item is array total of price items.|
-
+| Method        |args      |Description                                                                     |
+|---------------|-----------------|-------------------------------------------------------------------------|
+| reverse(@)    |currentNode      |Will return reverse order of currentNode                                 |
+| as(@,val)     |currentNode,value|Will cache currentNode as val for a later use. Will return currentNode.  |
+| like(@,val)   |currentNode,value|Will return currentNode if a is like val.                                |
+| is_in(@,node,list) |currentNode,node,list |Will return currentNode if a node if is in the list.           |
+| count(@, val) |currentNode,value|Will count the number of val in currentNode                             |
+| sum(@,key)    |currentNode,key  |Will retuen total value of attribute key in currentNode. if currentNode is array total of value in array nodes will be returned. If currentNode is a number, will return currentNode and ignores the key.|
 
 ## Sample Use
 To use the directive, load it on any tag (H, SPAN, I, ...). It does not matter what would host this directive. Load it as follows:
@@ -261,7 +313,7 @@ For example:
 // published after year 2000 which contains 'discovered platinum' phrase.
 this.select(
     "books.book[@.category=='WEB' && @.year > 2000].description.discovered platinum",
-    'sample1.xml',
+    'books.xml',
 	false
 ).subscribe(
 	(success) => {
@@ -279,7 +331,7 @@ this.select(
 // phrase.
 this.select(
     "books.book[@.category=='WEB' && @.year > 2000].description[@.indexOf('discovered platinum') > -1]",
-    'sample1.xml',
+    'books.xml',
 	false
 ).subscribe(
 	(success) => {
@@ -293,6 +345,9 @@ this.select(
 );
 ```
 ## Releases
+
+### Version 1.3.0
+added more global functions and ability to save result of one query as a value to be used in subsequent joined queries.
 
 ### Version 1.2.0
 added global functions to be used in query filtering syntax.

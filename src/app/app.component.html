@@ -5,7 +5,7 @@
   </h1>
 </div>
 
-<div class="note">
+<div class="note" [class.selected]="data != undefined">
   <label for="entry">Select a sample file: </label>
   <select id="entry"  (change)="selectSample($event)">
     <option>Select a file</option>
