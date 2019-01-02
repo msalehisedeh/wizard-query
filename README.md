@@ -2,7 +2,7 @@
 
 Have you ever been in need of accessing data deeply nested in multitude of files? Have you thought of a tool that can help you dig deep in a chain of files to find what you are looking for? This wizard allows you to just do that.
 
-You can use this wizard to discover content or call the WizardQueryService through provided methods to have your application access and use data in the most efficient way. The wizard will automatically parse the target URL into JSON no matter what the target content is. The target could have (XML, HTML, JSON, ...) externsion or no extension at all. You can fetch content of a remote file or a site. To do so, begin with blank `''` as a JSON path of the root page. This will reveal every node in object hierarchy of the target. Look at the content and if you find something you want to get all the times, use its JSON path in your fixed query. If the target node value is pointing to another file, use a join query for the JSON path that resulted the target node with a blank `''` JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for deeply nested in multitude of files.
+You can use this wizard to discover content through provided methods to have your application access and use data in the most efficient way. The wizard will automatically parse the target URL into JSON based on its content type. The target could have (XML, HTML, JSON, ...) externsion or no extension at all. You can fetch content of a remote file or a site. To do so, begin with blank `''` as a JSON path of the root page. This will reveal every node in object hierarchy of the target. Look at the content and if you find something you want to get all the times, use its JSON path in your fixed query. If the target node value is pointing to another file, use a join query for the JSON path that resulted the target node with a blank `''` JSON path for it to discover its content and repeat the steps you have followed to find the content you are looking for deeply nested in multitude of files.
 
 **I appreciate comments and ideas to make this tool versatile.**
 
@@ -78,7 +78,7 @@ will result in
 if `deepXml` is set to true, the cdata-sections in xml files will also be parsed when parsing a content.
 
 
-If a clause/handler argument is supplied, it will be invoked to further assist in filtering the query result. For example if result should be filtered out of the result and if certain category of books are required, the clause/handler function can look for a book category attribute and return the query result if acceptable or undefined. You can use both handler function and query filtering mechanism to manage generated results. In a certain situations that it is not possible to set up a filtering logic, I recommend using the handler mechanism in conjunction with the query filtering mechanism. Fore example, if you have multiple attributes in a structure and you need to pick one based on the device user is using, you can use a handler to decide the resulting value based on key in JSON path to trigger a code to decide on attribute value based on user device. Or format a value based on the key!!
+If a clause/handler argument is supplied, it will be invoked to further assist in filtering the query result. For example if result should be filtered out of the result and if certain category of books are required, the clause/handler function can look for a book category attribute and return the query result if acceptable or undefined. You can use both handler function and query filtering mechanism to manage generated results. In a certain situations that it is not possible to set up a filtering logic, I recommend using the handler mechanism in conjunction with the query filtering mechanism. Fore example, if you have multiple attributes in a structure and you need to pick one based on the device user is using, you can use a handler to decide the resulting value based on the JSON path argument in handler to decide on attribute value based on user device. Or format a value based on the path!!
 
 
 The wizard service allows you to set a default base path `SERVICE_PATH` that prepends to all query URLs. By default it's value is blank. Note: If the subsequent URLs in a chain query point to different website URLs, do not set the base url value. If the subsequent URLs are absolute, do not pass value for 'in' attribute of join statement. the 'in' attribute of joint statement is prepended to the path of the subsequent file resulten in parent query.
@@ -100,7 +100,7 @@ You can use the following functions in query filtering mechanism.
 
 ### Examples
 ```javascript
-books.book.title[reverse(@.book.title)]
+books[reverse(@.book.title.split(' '))]
 
 books.book.author[as(@,'authors')]
 
@@ -113,7 +113,7 @@ books[count(@book.description.trim().toLowerCase(),'is')]
 books[sum(@,'book.price')]
 ```
 
-## Sample Use
+## Directive and Component
 To use the directive, load it on any tag (H, SPAN, I, ...). It does not matter what would host this directive. Load it as follows:
 ```javascript
 <div 
@@ -366,6 +366,7 @@ this.select(
 ```
 ## Releases
 
+### Version 1.3.2
 ### Version 1.3.1
 Lat update for a while. Made corrections to README file.
 
