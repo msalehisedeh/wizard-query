@@ -89,12 +89,12 @@ There is a `logEnabled` attribute that allows service to log additional informat
 You can use the following functions in query filtering mechanism.
 | Method        |args      |Description                                                                     |
 |---------------|-----------------|-------------------------------------------------------------------------|
-| reverse(@)    |currentNode      |Will return reverse order of currentNode. `books.book.title[reverse(@.book.title)]`      |
-| as(@,val)     |currentNode,value|Will cache currentNode as val for a later use. Will return currentNode. `books.book.author[as(@,'authors')]`  |
-| like(@,val)   |currentNode,value|Will return currentNode if a is like val. `books.book.title[like(@,'freedom')]`   |
-| is_in(@,node,list) |currentNode,node,list |Will return currentNode if a node is in the list. `authors.author[is_in(@,@.name.fname,'authors')]` |
-| count(@, val) |currentNode,value|Will count the number of val in currentNode. `books[count(@book.description.trim().toLowerCase(),'is')]`  |
-| sum(@,key)    |currentNode,key  |Will retuen total value of attribute key in currentNode. if currentNode is array total of value in array nodes will be returned. If currentNode is a number, will return currentNode and ignores the key. `books[sum(@,'book.price')]`   |
+| reverse(@)    | currentNode      | Will return reverse order of currentNode. `books.book.title[reverse(@.book.title)]`      |
+| as(@,val)     | currentNode,value | Will cache currentNode as val for a later use. Will return currentNode. `books.book.author[as(@,'authors')]`  |
+| like(@,val)   | currentNode,value | Will return currentNode if a is like val. `books.book.title[like(@,'freedom')]`   |
+| is_in(@,node,list) | currentNode,node,list | Will return currentNode if a node is in the list. `authors.author[is_in(@,@.name.fname,'authors')]` |
+| count(@, val) | currentNode,value | Will count the number of val in currentNode. `books[count(@book.description.trim().toLowerCase(),'is')]`  |
+| sum(@,key)    | currentNode,key  | Will retuen total value of attribute key in currentNode. if currentNode is array total of value in array nodes will be returned. If currentNode is a number, will return currentNode and ignores the key. `books[sum(@,'book.price')]`   |
 
 ## Sample Use
 To use the directive, load it on any tag (H, SPAN, I, ...). It does not matter what would host this directive. Load it as follows:
