@@ -87,7 +87,8 @@ There is a `logEnabled` attribute that allows service to log additional informat
 
 ## global functions
 You can use the following functions in query filtering mechanism.
-| Method        |args      |Description                                                                        |
+
+| Method        |args                | Description                                                             |
 |---------------|--------------------|-------------------------------------------------------------------------|
 | reverse(@)    | currentNode        | Will return reverse order of currentNode.                               |
 | as(@,val)     | currentNode, value | Will cache currentNode as val for a later use. Will return currentNode. |
@@ -95,6 +96,7 @@ You can use the following functions in query filtering mechanism.
 | is_in(@,node,list) | currentNode, node, list | Will return currentNode if a node is in the list.             |
 | count(@, val) | currentNode, value | Will count the number of val in currentNode.                            |
 | sum(@,key)    | currentNode, key  | Will retuen total value of attribute key in currentNode. if currentNode is array total of value in array nodes will be returned. If currentNode is a number, will return currentNode and ignores the key.    |
+
 
 ### Examples
 ```javascript
