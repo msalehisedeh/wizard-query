@@ -6,8 +6,6 @@
   "whitelistedNonPeerDependencies": [
     "angular",
     "rxjs",
-    "xmldom",
-    "zone",
-    "core-js"
+    "xmldom"
   ]
 }

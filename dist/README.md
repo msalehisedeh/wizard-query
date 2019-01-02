@@ -45,17 +45,20 @@ chainSelect(
 	{
 		path:     // JSON-path (single string or array of paths)
 		in:      // URL of the data source
-		deepXml: // true/false - if xml content is fetched should the c-data parsed as well?
+		deepXml: // If xml content is fetched should the c-data parsed 
+		         // as well?
 		handler: // optional clause function handling data
 		join: {  // Optional join with content of same or another file
 			key: // a search key in parent query.
 			{
 				path:    // JSON-path (single string or array of paths)
-				in:      // relative URL of join data - if undefined, path will be searched in parent source,
+				in:      // relative URL of join data - if undefined, 
+				         // path will be searched in parent source,
 				handler: // optional clause function handling data
-				deepXml: // true/false - if xml content is fetched should the c-data parsed as well?
+				deepXml: // If xml content is fetched should the  
+				         // c-data parsed as well?
 				join: {
-					// MOREOPTIONAL NESTED QUERY.
+					// MORE OPTIONAL NESTED QUERY.
 				}
 			}
 		}
@@ -86,12 +89,12 @@ There is a `logEnabled` attribute that allows service to log additional informat
 You can use the following functions in query filtering mechanism.
 | Method        |args      |Description                                                                     |
 |---------------|-----------------|-------------------------------------------------------------------------|
-| reverse(@)    |currentNode      |Will return reverse order of currentNode                                 |
-| as(@,val)     |currentNode,value|Will cache currentNode as val for a later use. Will return currentNode.  |
-| like(@,val)   |currentNode,value|Will return currentNode if a is like val.                                |
-| is_in(@,node,list) |currentNode,node,list |Will return currentNode if a node if is in the list.           |
-| count(@, val) |currentNode,value|Will count the number of val in currentNode                             |
-| sum(@,key)    |currentNode,key  |Will retuen total value of attribute key in currentNode. if currentNode is array total of value in array nodes will be returned. If currentNode is a number, will return currentNode and ignores the key.|
+| reverse(@)    |currentNode      |Will return reverse order of currentNode. `books.book.title[reverse(@.book.title)]`      |
+| as(@,val)     |currentNode,value|Will cache currentNode as val for a later use. Will return currentNode. `books.book.author[as(@,'authors')]`  |
+| like(@,val)   |currentNode,value|Will return currentNode if a is like val. `books.book.title[like(@,'freedom')]` |
+| is_in(@,node,list) |currentNode,node,list |Will return currentNode if a node is in the list. `authors.author[is_in(@,@.name.fname,'authors')]` |
+| count(@, val) |currentNode,value|Will count the number of val in currentNode. `books[count(@book.description.trim().toLowerCase(),'is')]`|
+| sum(@,key)    |currentNode,key  |Will retuen total value of attribute key in currentNode. if currentNode is array total of value in array nodes will be returned. If currentNode is a number, will return currentNode and ignores the key. `books[sum(@,'book.price')]` |
 
 ## Sample Use
 To use the directive, load it on any tag (H, SPAN, I, ...). It does not matter what would host this directive. Load it as follows:
@@ -345,6 +348,9 @@ this.select(
 );
 ```
 ## Releases
+
+### Version 1.3.1
+Lat update for a while. Made corrections to README file.
 
 ### Version 1.3.0
 added more global functions and ability to save result of one query as a value to be used in subsequent joined queries.
