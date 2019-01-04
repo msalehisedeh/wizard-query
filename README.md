@@ -366,6 +366,9 @@ this.select(
 ```
 ## Releases
 
+### version 1.3.3
+found i had forgotten to export the directive.
+
 ### Version 1.3.2
 ### Version 1.3.1
 Lat update for a while. Made corrections to README file.

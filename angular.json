@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "visualize-it": {
+    "wizard-query": {
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
@@ -93,7 +93,7 @@
         }
       }
     },
-    "visualize-it-e2e": {
+    "wizard-query-e2e": {
       "root": "e2e",
       "sourceRoot": "e2e",
       "projectType": "application",

@@ -1,8 +1,8 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('rxjs/operators'), require('rxjs'), require('xmldom'), require('@angular/common'), require('@angular/common/http'), require('@angular/core')) :
-    typeof define === 'function' && define.amd ? define('wizard-query', ['exports', 'rxjs/operators', 'rxjs', 'xmldom', '@angular/common', '@angular/common/http', '@angular/core'], factory) :
-    (factory((global['wizard-query'] = {}),global.rxjs.operators,global.rxjs,global.xmldom,global.ng.common,global.ng.common.http,global.ng.core));
-}(this, (function (exports,operators,rxjs,xmldom,common,http,core) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('rxjs/operators'), require('rxjs'), require('xmldom'), require('@angular/core'), require('@angular/common'), require('@angular/common/http')) :
+    typeof define === 'function' && define.amd ? define('wizard-query', ['exports', 'rxjs/operators', 'rxjs', 'xmldom', '@angular/core', '@angular/common', '@angular/common/http'], factory) :
+    (factory((global['wizard-query'] = {}),global.rxjs.operators,global.rxjs,global.xmldom,global.ng.core,global.ng.common,global.ng.common.http));
+}(this, (function (exports,operators,rxjs,xmldom,core,common,http) { 'use strict';
 
     /**
      * @fileoverview added by tsickle
@@ -1292,8 +1292,8 @@
 
     exports.WizardQueryComponent = WizardQueryComponent;
     exports.WizardQueryService = WizardQueryService;
+    exports.WizardQueryDirective = WizardQueryDirective;
     exports.WizardQueryModule = WizardQueryModule;
-    exports.ɵa = WizardQueryDirective;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 

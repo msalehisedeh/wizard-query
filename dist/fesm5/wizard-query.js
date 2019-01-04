@@ -1,9 +1,9 @@
 import { map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import { DOMParser } from 'xmldom';
+import { Injectable, Component, Input, Directive, Output, EventEmitter, NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
-import { Injectable, Component, Input, Directive, Output, EventEmitter, NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 
 /**
  * @fileoverview added by tsickle
@@ -1287,6 +1287,6 @@ var WizardQueryModule = /** @class */ (function () {
  * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
  */
 
-export { WizardQueryComponent, WizardQueryService, WizardQueryModule, WizardQueryDirective as ɵa };
+export { WizardQueryComponent, WizardQueryService, WizardQueryDirective, WizardQueryModule };
 
 //# sourceMappingURL=wizard-query.js.map
