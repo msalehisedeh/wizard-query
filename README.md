@@ -6,6 +6,7 @@ You can use this wizard to discover content through provided methods to have you
 
 **I appreciate comments and ideas to make this tool versatile.**
 
+**NOTE:** Starting with version 1.3.4 all previous versions are deprecated and you need to import this library through @sedeh/wizard-query. Future bug fixes / enhancements will be on @sedeh scope.
 
 [Live Demo](https://wizard-query.stackblitz.io) | [Source code](https://github.com/msalehisedeh/wizard-query/tree/master/src/app) | [Comments/Requests](https://github.com/msalehisedeh/wizard-query/issues)
 
@@ -366,40 +367,21 @@ this.select(
 ```
 ## Releases
 
-### version 1.3.3
-found i had forgotten to export the directive.
-
-### Version 1.3.2
-### Version 1.3.1
-Lat update for a while. Made corrections to README file.
-
-### Version 1.3.0
-added more global functions and ability to save result of one query as a value to be used in subsequent joined queries.
-
-### Version 1.2.0
-added global functions to be used in query filtering syntax.
-
-### Version 1.1.4
-I am a perfectionist and trying to make this tool perfect. modified the wizard component to parse handler function typed in query editor without explicit 'return function'. This way the query handler function looks more natural.
-
-### Version 1.1.3
-Modified the component to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. Also, if you type in a handler in the JSON query, it can be parsed and become functional as well. Also, fixed a type in service which was not taking the handler function in chainSelect.
-
-### Version 1.1.2
-Modified the directive to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object.
-
-### Version 1.1.1
-Fixed an internal logic that was not returning correct results under special circumstances.
-
-### Version 1.1.0
-added deepXml flag to enable possibility of accessing cdata-section of xml content as a structure when cdata by itself is a html fragment.
-
-### Version 1.0.1
-corrections to README file.
-
-### Version 1.0.0
-initial functionality.
-
+| Version      |Description                                                           |
+|--------------|----------------------------------------------------------------------|
+|version 1.3.4 |Fix dependencies.                                                     |
+|version 1.3.3 |Found out that I had forgotten to export the directive.               |
+|version 1.3.2 |Made corrections to README file.                                      |
+|version 1.3.1 |Made corrections to README file.                                      |
+|version 1.3.0 |Added more global functions and ability to save result of one query as a value to be used in subsequent joined queries. |
+|version 1.2.0 |Added global functions to be used in query filtering syntax.          |
+|version 1.1.4 |I am a perfectionist and trying to make this tool perfect. modified the wizard component to parse handler function typed in query editor without explicit 'return function'. This way the query handler function looks more natural. |
+|version 1.1.3 |Modified the component to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. Also, if you type in a handler in the JSON query, it can be parsed and become functional as well. Also, fixed a type in service which was not taking the handler function in chainSelect. |
+|version 1.1.2 |Modified the directive to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. |
+|version 1.1.1 |Fixed an internal logic that was not returning correct results under special circumstances. |
+|version 1.1.0 |Added deepXml flag to enable possibility of accessing cdata-section of xml content as a structure when cdata by itself is a html fragment. |
+|version 1.0.1 |corrections to README file.                                           |
+|version 1.0.0 |Initial functionality.                                                |
 
 
 ![alt text](https://raw.githubusercontent.com/msalehisedeh/wizard-query/master/sample.png  "What you would see when a wizard-query sampler is used")
