@@ -7,6 +7,6 @@ export declare class WizardQueryComponent {
     query: any;
     queryInfo: any;
     constructor(queryService: WizardQueryService);
-    private parseFunctions(content);
+    private parseFunctions;
     executeQuery(text: any): void;
 }

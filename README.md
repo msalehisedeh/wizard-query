@@ -8,7 +8,44 @@ You can use this wizard to discover content through provided methods to have you
 
 **NOTE:** Starting with version 1.3.4 all previous versions are deprecated and you need to import this library through @sedeh/wizard-query. Future bug fixes / enhancements will be on @sedeh scope.
 
+
 [Live Demo](https://wizard-query.stackblitz.io) | [Source code](https://github.com/msalehisedeh/wizard-query/tree/master/src/app) | [Comments/Requests](https://github.com/msalehisedeh/wizard-query/issues)
+
+## Dependencies
+
+```javascript
+MODULE: 
+	WizardQueryModule
+
+EXPORTS:
+  WizardQueryComponent,
+  WizardQueryDirective,
+  WizardQueryService
+
+DEPENDENCIES: 
+    "xmldom": "^0.1.27"
+```
+
+## Imports
+
+```javascript
+@NgModule({
+  declarations: [
+    ...
+  ],
+  imports: [
+    ...,
+    WizardQueryModule
+  ],
+  providers: [
+	  ...
+  ],
+  bootstrap: [
+	  ...
+  ]
+})
+export class AppModule { }
+```
 
 ## How to use?
 If you do not want to directly use the WizardQueryService, you can use the WizardQueryDirective on any tag and receive the result using onQueryResult event. The wizard service provides the following methods:
@@ -367,21 +404,24 @@ this.select(
 ```
 ## Releases
 
-| Version      |Description                                                           |
-|--------------|----------------------------------------------------------------------|
-|version 1.3.4 |Fix dependencies.                                                     |
-|version 1.3.3 |Found out that I had forgotten to export the directive.               |
-|version 1.3.2 |Made corrections to README file.                                      |
-|version 1.3.1 |Made corrections to README file.                                      |
-|version 1.3.0 |Added more global functions and ability to save result of one query as a value to be used in subsequent joined queries. |
-|version 1.2.0 |Added global functions to be used in query filtering syntax.          |
-|version 1.1.4 |I am a perfectionist and trying to make this tool perfect. modified the wizard component to parse handler function typed in query editor without explicit 'return function'. This way the query handler function looks more natural. |
-|version 1.1.3 |Modified the component to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. Also, if you type in a handler in the JSON query, it can be parsed and become functional as well. Also, fixed a type in service which was not taking the handler function in chainSelect. |
-|version 1.1.2 |Modified the directive to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. |
-|version 1.1.1 |Fixed an internal logic that was not returning correct results under special circumstances. |
-|version 1.1.0 |Added deepXml flag to enable possibility of accessing cdata-section of xml content as a structure when cdata by itself is a html fragment. |
-|version 1.0.1 |corrections to README file.                                           |
-|version 1.0.0 |Initial functionality.                                                |
+|Version|Description                                                           |
+|-------|----------------------------------------------------------------------|
+| 2.0.0 |Updatin g to Angular 8.                                               |
+| 1.3.6 |Previous change did not work out. rolling it back.                    |
+| 1.3.5 |Trying to fix problem that stackblitz has with rendering DEMO application. added forRoot() and forChild() methods to the module. |
+| 1.3.4 |Fix dependencies.                                                     |
+| 1.3.3 |Found out that I had forgotten to export the directive.               |
+| 1.3.2 |Made corrections to README file.                                      |
+| 1.3.1 |Made corrections to README file.                                      |
+| 1.3.0 |Added more global functions and ability to save result of one query as a value to be used in subsequent joined queries. |
+| 1.2.0 |Added global functions to be used in query filtering syntax.          |
+| 1.1.4 |I am a perfectionist and trying to make this tool perfect. modified the wizard component to parse handler function typed in query editor without explicit 'return function'. This way the query handler function looks more natural. |
+| 1.1.3 |Modified the component to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. Also, if you type in a handler in the JSON query, it can be parsed and become functional as well. Also, fixed a type in service which was not taking the handler function in chainSelect. |
+| 1.1.2 |Modified the directive to make a call to arraySelect() if wizardQuery value is an array and call chainSelect() if the value is a JSON object. |
+| 1.1.1 |Fixed an internal logic that was not returning correct results under special circumstances. |
+| 1.1.0 |Added deepXml flag to enable possibility of accessing cdata-section of xml content as a structure when cdata by itself is a html fragment. |
+| 1.0.1 |corrections to README file.                                           |
+| 1.0.0 |Initial functionality.                                                |
 
 
 ![alt text](https://raw.githubusercontent.com/msalehisedeh/wizard-query/master/sample.png  "What you would see when a wizard-query sampler is used")

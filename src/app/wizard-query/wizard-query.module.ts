@@ -25,4 +25,4 @@ import { WizardQueryDirective } from './wizard-query.directive';
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class WizardQueryModule { }
+export class WizardQueryModule {}

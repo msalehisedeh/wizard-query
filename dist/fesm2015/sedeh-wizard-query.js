@@ -1,26 +1,17 @@
+import { __decorate } from 'tslib';
+import { Injectable, Input, Component, EventEmitter, Output, Directive, NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { HttpHeaders, HttpClient, HttpClientModule } from '@angular/common/http';
 import { map } from 'rxjs/operators';
 import { BehaviorSubject } from 'rxjs';
 import { DOMParser } from 'xmldom';
-import { Injectable, Component, Input, Directive, Output, EventEmitter, NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
- */
-class WizardQueryService {
-    /**
-     * @param {?} http
-     */
+let WizardQueryService = class WizardQueryService {
     constructor(http) {
         this.http = http;
         this.SERVICE_PATH = '';
         this.logEnabled = false;
     }
-    /**
-     * @return {?}
-     */
     _globalFunctions() {
         return `
         function reverse(a) {
@@ -124,14 +115,14 @@ class WizardQueryService {
         }
         `;
     }
-    /**
-     * @param {?} value
-     * @param {?} deepXml
-     * @return {?}
-     */
+    /*
+    * Will normalize the given xml out of additional #text or #cdata-section nodes.
+    * @param value the xml to be normailzed.
+    * @param deepXml if cdata-section should be parsed.
+    * @return normalized xml.
+    */
     _normalize(value, deepXml) {
         if (value instanceof Array) {
-            /** @type {?} */
             const result = [];
             value.map((item) => {
                 result.push(this._normalize(item, deepXml));
@@ -139,7 +130,6 @@ class WizardQueryService {
             value = result;
         }
         else if (typeof value === 'object') {
-            /** @type {?} */
             let items = Object.keys(value);
             if (items.length === 1 && !(value[items[0]] instanceof Array)) {
                 if (value['#text']) {
@@ -149,7 +139,6 @@ class WizardQueryService {
                     value = value['#cdata-section'];
                     if (deepXml) {
                         try {
-                            /** @type {?} */
                             const xml = new DOMParser().parseFromString(value);
                             value = (xml.documentElement && xml.documentElement != null) ?
                                 this._xml2json(xml.documentElement) :
@@ -161,7 +150,6 @@ class WizardQueryService {
                 }
             }
             else {
-                /** @type {?} */
                 const result = {};
                 items.map((item) => {
                     result[item] = this._normalize(value[item], deepXml);
@@ -171,24 +159,19 @@ class WizardQueryService {
         }
         return value;
     }
-    /**
-     * @param {?} path
-     * @param {?} data
-     * @param {?} as
-     * @param {?} deepXml
-     * @param {?=} clause
-     * @return {?}
-     */
+    /*
+    * @param path JSON path to evaluate. A path could be fully qualified for depth of json (i.e., 'a.b.c')
+    * @param data the data source.
+    * @param deepXml if cdata-section should be parsed.
+    * @param clause A method by which value(s) for the key(s) could be evaluated. the caller would evaluate the value for a given attribute.
+    * @returns returns evluated value for the key in data source.
+    */
     _valueOfJsonPath(path, data, as, deepXml, clause) {
-        /** @type {?} */
         let result;
-        /** @type {?} */
         let x = this._normalize(data, deepXml);
         path.map((subkey) => {
-            /** @type {?} */
             let node = x;
             if (node && node instanceof Array) {
-                /** @type {?} */
                 const t = [];
                 if (subkey.sort) {
                     node = subkey.sort(node);
@@ -198,10 +181,8 @@ class WizardQueryService {
                         if (subkey.key.length) {
                             x = subkey.key.length ? item[subkey.key] : item;
                             if (x && subkey.validated) {
-                                /** @type {?} */
                                 let r = true;
                                 subkey.validated.map(v => {
-                                    /** @type {?} */
                                     const z = v(x, as);
                                     if (typeof z === 'boolean') {
                                         if (z == false) {
@@ -222,10 +203,8 @@ class WizardQueryService {
                         }
                         else {
                             if (subkey.validated) {
-                                /** @type {?} */
                                 let r = true;
                                 subkey.validated.map(v => {
-                                    /** @type {?} */
                                     const z = v(item, as);
                                     if (typeof z === 'boolean') {
                                         if (z == false) {
@@ -264,17 +243,14 @@ class WizardQueryService {
                     clause(node, subkey.key, subkey.key.length ? x[subkey.key] : x) :
                     undefined;
                 if (x && x instanceof Array) {
-                    /** @type {?} */
                     const t = [];
                     if (subkey.sort) {
                         x = subkey.sort(x);
                     }
                     x.map((item) => {
                         if (subkey.validated) {
-                            /** @type {?} */
                             let r = true;
                             subkey.validated.map(v => {
-                                /** @type {?} */
                                 const z = v(item, as);
                                 if (typeof z === 'boolean') {
                                     if (z == false) {
@@ -298,10 +274,8 @@ class WizardQueryService {
                 }
                 else if (x) {
                     if (subkey.validated) {
-                        /** @type {?} */
                         let r = true;
                         subkey.validated.map(v => {
-                            /** @type {?} */
                             const z = v(x, as);
                             if (typeof z === 'boolean') {
                                 if (z == false) {
@@ -338,29 +312,18 @@ class WizardQueryService {
         });
         return result;
     }
-    /**
-     * @param {?} path
-     * @return {?}
-     */
     _get(path) {
-        /** @type {?} */
         const url = this.SERVICE_PATH + path;
-        /** @type {?} */
         const dot = path.lastIndexOf('.');
-        /** @type {?} */
         const ext = dot < 0 ? undefined : path.toLowerCase().substr(dot);
-        /** @type {?} */
         const headers = new HttpHeaders();
-        /** @type {?} */
         let result;
         headers.set('Access-Control-Allow-Origin', '*');
         if (ext === '.xml') {
             headers.set('Content-Type', 'text; charset=utf-8').set('Accept', 'text');
             result = this.http.get(url, { headers, responseType: 'text' })
                 .pipe(map((res) => {
-                /** @type {?} */
                 const xml = new DOMParser().parseFromString(res);
-                /** @type {?} */
                 const json = this._xml2json(xml.documentElement);
                 return json;
             }));
@@ -377,14 +340,12 @@ class WizardQueryService {
             headers.set('Content-Type', 'text; charset=utf-8').set('Accept', 'text');
             result = this.http.get(url, { headers, responseType: 'text' })
                 .pipe(map((res) => {
-                /** @type {?} */
                 let parsed;
                 try {
                     parsed = JSON.parse(res);
                 }
                 catch (e) {
                     try {
-                        /** @type {?} */
                         const xml = new DOMParser().parseFromString(res);
                         parsed = this._xml2json(xml.documentElement);
                     }
@@ -392,22 +353,17 @@ class WizardQueryService {
                         parsed = res;
                     }
                 }
+                ;
                 return parsed ? parsed : res;
             }));
         }
         return result;
     }
-    /**
-     * @param {?} key
-     * @return {?}
-     */
     _stringValueOfKey(key) {
-        /** @type {?} */
         let result = [];
         if (key instanceof Array) {
             key.map((item) => {
                 if (item instanceof Array) {
-                    /** @type {?} */
                     let x = [];
                     item.map((subitem) => {
                         if (subitem.key.length) {
@@ -417,11 +373,8 @@ class WizardQueryService {
                     result.push(x.join('.'));
                 }
                 else if (typeof item === 'string') {
-                    /** @type {?} */
                     const i = item.indexOf('[');
-                    /** @type {?} */
                     const j = item.indexOf(']');
-                    /** @type {?} */
                     const k = item.length > (j + 1) ? 2 : 1;
                     result.push(i > 0 ? item.substring(0, i) : j > 0 ? item.substring(j + k) : item);
                 }
@@ -437,27 +390,15 @@ class WizardQueryService {
         }
         return result;
     }
-    /**
-     * @param {?} value
-     * @param {?} key
-     * @param {?} operation
-     * @param {?} action
-     * @return {?}
-     */
     _addToResult(value, key, operation, action) {
-        /** @type {?} */
         const path = this._stringValueOfKey(action.path);
-        /** @type {?} */
         const key2 = this._stringValueOfKey(key);
-        /** @type {?} */
         let op = operation.result[path];
-        /** @type {?} */
         let complete = false;
         if (!op) {
             operation.result[path] = {};
         }
         if (op) {
-            /** @type {?} */
             let opk = op[key2];
             if (operation['temp'] &&
                 operation['temp'][key2]) {
@@ -511,13 +452,8 @@ class WizardQueryService {
         }
         return complete;
     }
-    /**
-     * @param {?} result
-     * @return {?}
-     */
     _pack(result) {
         if (result instanceof Array) {
-            /** @type {?} */
             const list = [];
             result.map((item) => {
                 list.push(this._pack(item));
@@ -525,12 +461,11 @@ class WizardQueryService {
             result = list;
         }
         else if (typeof result === 'object') {
-            /** @type {?} */
             const keys = Object.keys(result);
             keys.map((key) => {
-                /** @type {?} */
                 const item = result[key];
-                if (item instanceof Array) ;
+                if (item instanceof Array) {
+                }
                 else if (item[key]) {
                     result[key] = item[key];
                 }
@@ -538,16 +473,8 @@ class WizardQueryService {
         }
         return result;
     }
-    /**
-     * @param {?} promise
-     * @param {?} as
-     * @param {?} result
-     * @return {?}
-     */
     _triggerResult(promise, as, result) {
-        /** @type {?} */
         const x = this._pack(result);
-        /** @type {?} */
         let saveAs;
         if (as) {
             if (typeof as === 'string') {
@@ -561,13 +488,6 @@ class WizardQueryService {
         promise.next(x);
         return saveAs;
     }
-    /**
-     * @param {?} promise
-     * @param {?} path
-     * @param {?} operation
-     * @param {?} action
-     * @return {?}
-     */
     _subquery(promise, path, operation, action) {
         if (operation.cachedFiles[path] === undefined) {
             // one of the keys at this level could be referencing the same file which
@@ -585,7 +505,6 @@ class WizardQueryService {
         // wait for result raised above.
         operation.cachedFiles[path].subscribe((source) => {
             if (source) {
-                /** @type {?} */
                 const opkeyi = action.join ? action.join[action.path] : undefined;
                 if (opkeyi) {
                     if (source instanceof Array) {
@@ -630,13 +549,14 @@ class WizardQueryService {
             operation.as = this._triggerResult(promise, operation.as, operation.result);
         });
     }
-    /**
-     * @param {?} promise
-     * @param {?} operation
-     * @param {?} action
-     * @param {?=} cacheNamed
-     * @return {?}
-     */
+    /*
+    * Iterates through a chain query.
+    * @param promise The promise which original caller is waiting for.
+    * @param operation data for keeping track of the iteration.
+    * @param action contains: {path: current keys to query for, in: current query path, handler: resolver method}.
+    * @param cacheNamed The cached name from previous iteration if any.
+    * @returns returns none.
+    */
     _queryIteration(promise, operation, action, cacheNamed) {
         if (!action.handler) {
             action.handler = (node, path, value) => value;
@@ -649,14 +569,11 @@ class WizardQueryService {
                 }
                 else {
                     if (data instanceof Array) {
-                        /** @type {?} */
                         const operationalKey = action.join ? action.join[action.path] : undefined;
                         if (operationalKey) {
                             // assumption is the resulting list is a list of file paths.
                             data.map((content) => {
-                                /** @type {?} */
                                 const path = content['#text'] ? content['#text'] : content;
-                                /** @type {?} */
                                 let size = (operationalKey.path instanceof Array) ? operationalKey.path.length : 1;
                                 if (operationalKey.in == undefined) {
                                     operation.cachedFiles[path] = this._select(operationalKey.path, action.in, operationalKey.deepXml, operation.as, operationalKey.handler);
@@ -676,7 +593,6 @@ class WizardQueryService {
                             // no more query in the chain.
                             action.queryItems--;
                             if (action.queryItems === 0) {
-                                /** @type {?} */
                                 const result = operation.result ? operation.result : {};
                                 operation.as = this._triggerResult(promise, operation.as, Object.keys(operation.result).length ? operation.result : data);
                             }
@@ -684,12 +600,9 @@ class WizardQueryService {
                     }
                     else if (typeof data === 'object') {
                         Object.keys(data).map((key) => {
-                            /** @type {?} */
                             const content = data[key];
-                            /** @type {?} */
                             const operationalKey = action.join ? action.join[key] : undefined;
                             if (content && content.length && operationalKey) {
-                                /** @type {?} */
                                 let size = (operationalKey.path instanceof Array) ? operationalKey.path.length : 1;
                                 if (operationalKey.in == undefined) {
                                     operation.cachedFiles[content] = this._select(operationalKey.path, action.in, operationalKey.deepXml, operation.as, operationalKey.handler);
@@ -744,17 +657,10 @@ class WizardQueryService {
             }
         });
     }
-    /**
-     * @param {?} key
-     * @return {?}
-     */
     _makeArguments(key) {
-        /** @type {?} */
         const list = key.split('.');
-        /** @type {?} */
         const result = [];
         list.map((item) => {
-            /** @type {?} */
             const b = item.indexOf('[');
             if (b < 0) {
                 result.push({
@@ -763,11 +669,8 @@ class WizardQueryService {
                 });
             }
             else {
-                /** @type {?} */
                 let str = item.substring(b + 1, item.length - 1);
-                /** @type {?} */
                 const vList = str.split('][');
-                /** @type {?} */
                 const object = {
                     key: item.substring(0, b),
                     validated: [(data, as) => true]
@@ -776,31 +679,23 @@ class WizardQueryService {
                     filter = filter.replace(/\`/g, '.');
                     filter = filter.replace(/\@/g, 'data');
                     if (filter.indexOf('order-by:') > -1) {
-                        /** @type {?} */
                         const arg = filter.substring(filter.indexOf('order-by:') + 10).trim();
-                        /** @type {?} */
                         const arglist = arg.split('~');
-                        /** @type {?} */
                         const key = arglist[0].trim();
-                        /** @type {?} */
                         const order = arglist[1] ? arglist[1].trim().toLowerCase() : 'asc';
                         object['sort'] = function (array) {
-                            /** @type {?} */
                             const _valueOf = (key, p) => {
                                 key.split('.').map((x) => { p = p[x]; });
                                 return p;
                             };
                             return array.sort(function (a, b) {
-                                /** @type {?} */
                                 const flag = _valueOf(key, a) > _valueOf(key, b);
                                 return flag ? (order === 'asc' ? 1 : -1) : (order === 'asc' ? -1 : 1);
                             });
                         };
                     }
                     else {
-                        /** @type {?} */
                         const t = filter.indexOf('&&') > 0 || filter.indexOf('||') > 0;
-                        /** @type {?} */
                         let f = 'return function (data, asList) { \n';
                         f += this._globalFunctions();
                         f += 'var x = false;\n try{\n x = ';
@@ -813,18 +708,11 @@ class WizardQueryService {
         });
         return result;
     }
-    /**
-     * @param {?} path
-     * @return {?}
-     */
     _handleSpecialCharacters(path) {
-        /** @type {?} */
         let result = [];
         path.split(']').map((item) => {
-            /** @type {?} */
             const bindex = item.indexOf('[');
             if (bindex >= 0) {
-                /** @type {?} */
                 let x = '';
                 if (bindex > 0) {
                     x += item.substring(0, bindex);
@@ -838,43 +726,25 @@ class WizardQueryService {
         });
         return result.join(']');
     }
-    /**
-     * @param {?} path
-     * @return {?}
-     */
     _prepareJsonPath(path) {
-        /** @type {?} */
         let result;
         if (path instanceof Array) {
             result = [];
             path.map((i) => {
-                /** @type {?} */
                 const x = this._handleSpecialCharacters(i);
                 result.push(this._makeArguments(x));
             });
         }
         else {
-            /** @type {?} */
             const x = this._handleSpecialCharacters(path);
             result = this._makeArguments(x);
         }
         return result;
     }
-    /**
-     * @param {?} path
-     * @param {?} from
-     * @param {?} deepXml
-     * @param {?} as
-     * @param {?=} clause
-     * @return {?}
-     */
     _select(path, from, deepXml, as, clause) {
-        /** @type {?} */
         const dataStore = new BehaviorSubject(null);
         this._get(from).subscribe((data) => {
-            /** @type {?} */
             let result;
-            /** @type {?} */
             const jpath = this._prepareJsonPath(path);
             if (!clause) {
                 clause = (node, path, value) => value;
@@ -882,10 +752,8 @@ class WizardQueryService {
             if (path instanceof Array) {
                 result = {};
                 jpath.map((pathItem) => {
-                    /** @type {?} */
                     const y = this._valueOfJsonPath(pathItem, data, as, deepXml, clause);
                     if (y) {
-                        /** @type {?} */
                         let key = this._stringValueOfKey(pathItem);
                         result[key] = y;
                     }
@@ -908,31 +776,26 @@ class WizardQueryService {
         });
         return dataStore;
     }
-    /**
-     * @param {?} xml
-     * @return {?}
-     */
+    /*
+    * Will convert the xml into a json.
+    * @param xml XML to be converted.
+    * @returns returns converted JSON.
+    */
     _xml2json(xml) {
         try {
-            /** @type {?} */
             let obj = {};
             if (xml.attributes) {
-                /** @type {?} */
                 const c = xml.attributes;
                 for (let i = 0; i < c.length; i++) {
-                    /** @type {?} */
                     const attr = c[i];
                     obj[attr.name] = attr.value;
                 }
             }
             if (xml.childNodes && xml.childNodes.length) {
                 for (let i = 0; i < xml.childNodes.length; i++) {
-                    /** @type {?} */
                     const item = xml.childNodes[i];
-                    /** @type {?} */
                     const nodeName = item.nodeName;
                     if (obj[nodeName] === undefined) {
-                        /** @type {?} */
                         const fragment = this._xml2json(item);
                         if (fragment) {
                             obj[nodeName] = fragment;
@@ -940,12 +803,10 @@ class WizardQueryService {
                     }
                     else {
                         if (obj[nodeName].push === undefined) {
-                            /** @type {?} */
                             const old = obj[nodeName];
                             obj[nodeName] = [];
                             obj[nodeName].push(old);
                         }
-                        /** @type {?} */
                         const fragment = this._xml2json(item);
                         if (fragment) {
                             obj[nodeName].push(fragment);
@@ -954,7 +815,6 @@ class WizardQueryService {
                 }
             }
             else {
-                /** @type {?} */
                 const text = xml.textContent.trim().replace(/(?:\r\n|\r|\n|\t)/g, '');
                 obj = text.length ? text : undefined;
             }
@@ -966,16 +826,24 @@ class WizardQueryService {
             }
         }
     }
-    /**
-     * @param {?} chainQuery
-     * @return {?}
-     */
+    /*
+    * Will do a chain query on specified paths from remote location.
+    * @param chainQuery A Json structure with paths. Each path will contain a chain of instructions.
+    * Each instruction will have a 'in' to a file and a path to search on it (see. select()). once the
+    * result is in, the next instruction in the path chain will be trigged. After the path through all
+    * chained paths is completed, resulting value will be put in a json where its path is the original
+    * json path and its value will be the resulting value.
+    *
+    * this is not fully tested. caller should pass something like
+    * {path: [path1,path2], in: 'something or blank', deepXml: true, join: {k1: {path: path3, in: 'something or plank', clause: function}}}
+    * if path1 or path2 or path3 are found at the root object, a chain reaction to fetch deep will follow. An
+    * optional clause will help resolve complex situations.
+    *
+    * @returns returns an observable. the caller should subscribe to this in order to receive the result.
+    */
     chainSelect(chainQuery) {
-        /** @type {?} */
         const size = (chainQuery.path instanceof Array) ? chainQuery.path.length : 1;
-        /** @type {?} */
         const operation = { cachedFiles: {}, as: {}, result: {} };
-        /** @type {?} */
         const dataStore = new BehaviorSubject(null);
         operation.cachedFiles[chainQuery.path] = dataStore;
         this._queryIteration(dataStore, operation, {
@@ -988,13 +856,13 @@ class WizardQueryService {
         });
         return dataStore;
     }
-    /**
-     * @param {?} list
-     * @param {?=} clause
-     * @return {?}
-     */
+    /*
+    * Will group file paths if they are similar to avoid multiple calls.
+    * @param list A list of Json {paths, in, deepXml} structures. deepXml is optional.
+    * @param clause A method by which value(s) for the path(s) could be evaluated. the caller would evaluate the value for a given attribute.
+    * @returns returns an observable. the caller should subscribe to this in order to receive the result.
+    */
     arraySelect(list, clause) {
-        /** @type {?} */
         const groupedList = {};
         list.map((item) => {
             if (groupedList[item.in] === undefined) {
@@ -1002,7 +870,6 @@ class WizardQueryService {
             }
             groupedList[item.in].push({ path: item.path, deepXml: item.deepXml });
         });
-        /** @type {?} */
         const dataStore = new BehaviorSubject(null);
         Object.keys(groupedList).map((url) => {
             this._select(groupedList[url].path, url, groupedList[url].deepXml, undefined, clause).subscribe((data) => {
@@ -1015,40 +882,30 @@ class WizardQueryService {
         });
         return dataStore;
     }
-    /**
-     * @param {?} path
-     * @param {?} from
-     * @param {?} deepXml
-     * @param {?=} clause
-     * @return {?}
-     */
+    /*
+    * Will query path from a remote location qualified through an optional clause function that
+    * evaluates, filters, or sorts the resul of the query.
+    * @param path A a single JSON path or list of paths to select (i.e., 'a.b.c')
+    * @param from A reference URL to a remote source.
+    * @param deepXml if cdata-section should be parsed.
+    * @param clause A method by which value(s) for the path(s) could be evaluated. the caller would evaluate the value for a given attribute.
+    * @returns returns an observable. the caller should subscribe to this in order to receive the result.
+    */
     select(path, from, deepXml, clause) {
         return this._select(path, from, deepXml, undefined, clause);
     }
-}
-WizardQueryService.decorators = [
-    { type: Injectable }
-];
-/** @nocollapse */
+};
 WizardQueryService.ctorParameters = () => [
     { type: HttpClient }
 ];
+WizardQueryService = __decorate([
+    Injectable()
+], WizardQueryService);
 
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
- */
-class WizardQueryComponent {
-    /**
-     * @param {?} queryService
-     */
+let WizardQueryComponent = class WizardQueryComponent {
     constructor(queryService) {
         this.queryService = queryService;
     }
-    /**
-     * @param {?} data
-     * @return {?}
-     */
     set queryInfo(data) {
         this.query = data;
         if (this.query) {
@@ -1071,10 +928,6 @@ class WizardQueryComponent {
             this.source = undefined;
         }
     }
-    /**
-     * @param {?} content
-     * @return {?}
-     */
     parseFunctions(content) {
         if (content instanceof Array) {
             content.map((item) => {
@@ -1092,13 +945,8 @@ class WizardQueryComponent {
             });
         }
     }
-    /**
-     * @param {?} text
-     * @return {?}
-     */
     executeQuery(text) {
         try {
-            /** @type {?} */
             const content = JSON.parse(text.value);
             this.parseFunctions(content);
             if (content instanceof Array) {
@@ -1124,39 +972,27 @@ class WizardQueryComponent {
             this.data = { alert: err.message };
         }
     }
-}
-WizardQueryComponent.decorators = [
-    { type: Component, args: [{
-                selector: 'wizard-query',
-                template: "\n<div class=\"entry\" *ngIf=\"source\">\n  <div class=\"entry-label\">Source: {{selectedDocumentName}}</div>\n  <div class=\"entry-label\">Type or modify query</div>\n  <div class=\"entry-json\">{{ source | json }}</div>\n  <textarea #text [value]=\"query | json\" (input)=\"data = undefined\"></textarea>\n  <div class=\"submit\"><button (click)=\"executeQuery(text)\">Execute query</button></div>\n</div>\n\n<div *ngIf=\"data\" class=\"result-json\">{{ data | json }}</div>\n",
-                styles: [".result-json{border:1px solid #633;background-color:#fefefe;border-radius:5px;box-sizing:border-box;display:block;max-height:222px;min-height:222px;overflow-y:auto;position:relative;font-family:monospace;float:left;padding:5px;unicode-bidi:embed;width:100%;white-space:pre-wrap}.entry .entry-json{border:1px solid #633;background-color:#fefefe;box-sizing:border-box;display:block;max-height:222px;min-height:222px;overflow-y:auto;position:relative;font-family:monospace;float:left;padding:5px;unicode-bidi:embed;width:50%;white-space:pre-wrap;border-radius:0 0 0 5px}.entry textarea{width:50%;min-height:222px;max-height:222px;resize:none;box-sizing:border-box;padding:5px;border-radius:0 0 5px}.entry .entry-label{width:50%;font-weight:700;padding:5px;background-color:#888;color:#fff;float:left;box-sizing:border-box}.entry .submit{text-align:center;padding-bottom:5px}.entry .submit button{padding:5px 35px}"]
-            }] }
-];
-/** @nocollapse */
+};
 WizardQueryComponent.ctorParameters = () => [
     { type: WizardQueryService }
 ];
-WizardQueryComponent.propDecorators = {
-    queryInfo: [{ type: Input }]
-};
+__decorate([
+    Input()
+], WizardQueryComponent.prototype, "queryInfo", null);
+WizardQueryComponent = __decorate([
+    Component({
+        selector: 'wizard-query',
+        template: "\n<div class=\"entry\" *ngIf=\"source\">\n  <div class=\"entry-label\">Source: {{selectedDocumentName}}</div>\n  <div class=\"entry-label\">Type or modify query</div>\n  <div class=\"entry-json\">{{ source | json }}</div>\n  <textarea #text [value]=\"query | json\" (input)=\"data = undefined\"></textarea>\n  <div class=\"submit\"><button (click)=\"executeQuery(text)\">Execute query</button></div>\n</div>\n\n<div *ngIf=\"data\" class=\"result-json\">{{ data | json }}</div>\n",
+        styles: [".result-json{border:1px solid #633;background-color:#fefefe;border-radius:5px;box-sizing:border-box;display:block;max-height:222px;min-height:222px;overflow-y:auto;position:relative;font-family:monospace;float:left;padding:5px;unicode-bidi:embed;width:100%;white-space:pre-wrap}.entry .entry-json{border:1px solid #633;background-color:#fefefe;box-sizing:border-box;display:block;max-height:222px;min-height:222px;overflow-y:auto;position:relative;font-family:monospace;float:left;padding:5px;unicode-bidi:embed;width:50%;white-space:pre-wrap;border-radius:0 0 0 5px}.entry textarea{width:50%;min-height:222px;max-height:222px;resize:none;box-sizing:border-box;padding:5px;border-radius:0 0 5px}.entry .entry-label{width:50%;font-weight:700;padding:5px;background-color:#888;color:#fff;float:left;box-sizing:border-box}.entry .submit{text-align:center;padding-bottom:5px}.entry .submit button{padding:5px 35px}"]
+    })
+], WizardQueryComponent);
 
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
- */
-class WizardQueryDirective {
-    /**
-     * @param {?} queryService
-     */
+let WizardQueryDirective = class WizardQueryDirective {
     constructor(queryService) {
         this.queryService = queryService;
         this.onQueryResult = new EventEmitter();
         this.onQueryError = new EventEmitter();
     }
-    /**
-     * @param {?} info
-     * @return {?}
-     */
     set wizardQuery(info) {
         this.query = info;
         if (this.query) {
@@ -1183,59 +1019,51 @@ class WizardQueryDirective {
             this.onQueryResult.emit(undefined);
         }
     }
-}
-WizardQueryDirective.decorators = [
-    { type: Directive, args: [{
-                selector: '[wizardQuery]'
-            },] }
-];
-/** @nocollapse */
+};
 WizardQueryDirective.ctorParameters = () => [
     { type: WizardQueryService }
 ];
-WizardQueryDirective.propDecorators = {
-    onQueryResult: [{ type: Output }],
-    onQueryError: [{ type: Output }],
-    wizardQuery: [{ type: Input }]
+__decorate([
+    Output()
+], WizardQueryDirective.prototype, "onQueryResult", void 0);
+__decorate([
+    Output()
+], WizardQueryDirective.prototype, "onQueryError", void 0);
+__decorate([
+    Input()
+], WizardQueryDirective.prototype, "wizardQuery", null);
+WizardQueryDirective = __decorate([
+    Directive({
+        selector: '[wizardQuery]'
+    })
+], WizardQueryDirective);
+
+let WizardQueryModule = class WizardQueryModule {
 };
+WizardQueryModule = __decorate([
+    NgModule({
+        declarations: [
+            WizardQueryComponent,
+            WizardQueryDirective
+        ],
+        exports: [
+            WizardQueryComponent,
+            WizardQueryDirective
+        ],
+        imports: [
+            CommonModule,
+            HttpClientModule
+        ],
+        providers: [
+            WizardQueryService
+        ],
+        schemas: [CUSTOM_ELEMENTS_SCHEMA]
+    })
+], WizardQueryModule);
 
 /**
- * @fileoverview added by tsickle
- * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
- */
-class WizardQueryModule {
-}
-WizardQueryModule.decorators = [
-    { type: NgModule, args: [{
-                declarations: [
-                    WizardQueryComponent,
-                    WizardQueryDirective
-                ],
-                exports: [
-                    WizardQueryComponent,
-                    WizardQueryDirective
-                ],
-                imports: [
-                    CommonModule,
-                    HttpClientModule
-                ],
-                providers: [
-                    WizardQueryService
-                ],
-                schemas: [CUSTOM_ELEMENTS_SCHEMA]
-            },] }
-];
-
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
+ * Generated bundle index. Do not edit.
  */
 
-/**
- * @fileoverview added by tsickle
- * @suppress {checkTypes,extraRequire,uselessCode} checked by tsc
- */
-
-export { WizardQueryComponent, WizardQueryService, WizardQueryDirective, WizardQueryModule };
-
+export { WizardQueryComponent, WizardQueryDirective, WizardQueryModule, WizardQueryService };
 //# sourceMappingURL=sedeh-wizard-query.js.map
