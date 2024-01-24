@@ -1,0 +1,35 @@
+{
+  "name": "@sedeh/wizard-query",
+  "version": "3.0.0",
+  "keywords": [
+    "angular 6+",
+    "json",
+    "xml",
+    "jsonpath",
+    "json-path",
+    "tree traversal",
+    "node-query",
+    "object-query",
+    "json-query",
+    "xml-query",
+    "json-find",
+    "configurable",
+    "flexible",
+    "data mining",
+    "mining",
+    "investigate",
+    "sql",
+    "poke",
+    "search"
+  ],
+  "peerDependencies": {
+    "@angular/common": "^15.2.0",
+    "@angular/core": "^15.2.0"
+  },
+  "dependencies": {
+    "xmldom": "^0.6.0",
+    "@types/xmldom": "^0.1.34",
+    "tslib": "^2.3.0"
+  },
+  "sideEffects": false
+}

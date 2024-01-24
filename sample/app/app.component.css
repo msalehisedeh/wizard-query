@@ -1,0 +1,18 @@
+
+.note {
+    width: 100%;
+    padding: 5px;
+    background-color: var(--system-wizard-label-color, #1394d6);
+    color: var(--system-wizard-text-color, white);
+    box-sizing: border-box;
+    border-bottom: 6px double;
+}
+.resources {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #551234;
+    font-weight: bold;
+}
+select {
+    height: 30px;
+}
